@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { of } from 'rxjs';
-import { catchError, map, mergeMap, switchMap } from 'rxjs/operators';
+import { catchError, map, mergeMap, switchMap, tap } from 'rxjs/operators';
 import { ProjectService } from '../../services/project.service';
 import * as ProjectActions from './project.actions';
 import { inject } from '@angular/core';
@@ -11,13 +11,25 @@ export class ProjectEffects {
   private actions$ = inject(Actions);
   private projectService = inject(ProjectService);
 
-  loadProjects$ = createEffect(() => this.actions$?.pipe(
-    ofType(ProjectActions.loadProjects),
-    switchMap(() => this.projectService.getProjects().pipe(
-      map(projects => ProjectActions.loadProjectsSuccess({ projects })),
-      catchError(error => of(ProjectActions.loadProjectsFailure({ error })))
-    ))
-  ));
+// In ProjectEffects
+loadProjects$ = createEffect(() => this.actions$.pipe(
+  ofType(ProjectActions.loadProjects),
+  tap(() => console.log('ProjectEffects: loadProjects action received')),
+  switchMap(() => {
+    console.log('ProjectEffects: Making HTTP request to load projects');
+    return this.projectService.getProjects().pipe(
+      tap(projects => console.log('ProjectEffects: Projects loaded successfully', projects)),
+      map(projects => {
+        console.log('ProjectEffects: Dispatching success action');
+        return ProjectActions.loadProjectsSuccess({ projects });
+      }),
+      catchError(error => {
+        console.error('ProjectEffects: Error loading projects', error);
+        return of(ProjectActions.loadProjectsFailure({ error }));
+      })
+    );
+  })
+));
 
   loadProject$ = createEffect(() => this.actions$?.pipe(
     ofType(ProjectActions.loadProject),

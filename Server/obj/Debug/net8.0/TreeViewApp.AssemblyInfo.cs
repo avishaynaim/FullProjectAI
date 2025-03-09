@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TreeViewApp")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+64153a687eb8cdb06eb3a9bc9157fb8111a4fc0c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b4c96332a47f1cb12b2c51a770d2da1d3670c21a")]
 [assembly: System.Reflection.AssemblyProductAttribute("TreeViewApp")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TreeViewApp")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

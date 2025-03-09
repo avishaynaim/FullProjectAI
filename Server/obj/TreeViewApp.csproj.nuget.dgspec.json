@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\a06n178\\TreeViewApp\\TreeViewApp.csproj": {}
+    "C:\\Users\\a06n178\\FullProjectAI\\Server\\TreeViewApp.csproj": {}
   },
   "projects": {
-    "C:\\Users\\a06n178\\TreeViewApp\\TreeViewApp.csproj": {
+    "C:\\Users\\a06n178\\FullProjectAI\\Server\\TreeViewApp.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\a06n178\\TreeViewApp\\TreeViewApp.csproj",
+        "projectUniqueName": "C:\\Users\\a06n178\\FullProjectAI\\Server\\TreeViewApp.csproj",
         "projectName": "TreeViewApp",
-        "projectPath": "C:\\Users\\a06n178\\TreeViewApp\\TreeViewApp.csproj",
+        "projectPath": "C:\\Users\\a06n178\\FullProjectAI\\Server\\TreeViewApp.csproj",
         "packagesPath": "C:\\Users\\a06n178\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\a06n178\\TreeViewApp\\obj\\",
+        "outputPath": "C:\\Users\\a06n178\\FullProjectAI\\Server\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\a06n178\\AppData\\Roaming\\NuGet\\NuGet.Config"

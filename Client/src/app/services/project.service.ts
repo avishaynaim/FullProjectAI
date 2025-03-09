@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { catchError, Observable, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Project } from '../components/project/project.model';
 
@@ -13,9 +13,21 @@ export class ProjectService {
 
   constructor(private http: HttpClient) { }
 
-  getProjects(): Observable<Project[]> {
-    return this.http.get<Project[]>(this.apiUrl);
-  }
+  // In ProjectService
+getProjects(): Observable<Project[]> {
+  console.log(`ProjectService: Making HTTP request to ${this.apiUrl}`);
+  return this.http.get<Project[]>(this.apiUrl).pipe(
+    tap(data => console.log('ProjectService: Received response', data)),
+    catchError(error => {
+      console.error('ProjectService: HTTP error', error);
+      throw error;
+    })
+  );
+}
+
+  // getProjects(): Observable<Project[]> {
+  //   return this.http.get<Project[]>(this.apiUrl);
+  // }
 
   getProject(id: string): Observable<Project> {
     return this.http.get<Project>(`${this.apiUrl}/${id}`);

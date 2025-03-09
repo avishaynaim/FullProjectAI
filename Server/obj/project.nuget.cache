@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "mcJYrpOpTT4=",
+  "dgSpecHash": "AkZ7VzVMZwk=",
   "success": true,
-  "projectFilePath": "C:\\Users\\a06n178\\TreeViewApp\\TreeViewApp.csproj",
+  "projectFilePath": "C:\\Users\\a06n178\\FullProjectAI\\Server\\TreeViewApp.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\a06n178\\.nuget\\packages\\microsoft.aspnetcore.authentication.abstractions\\2.3.0\\microsoft.aspnetcore.authentication.abstractions.2.3.0.nupkg.sha512",
     "C:\\Users\\a06n178\\.nuget\\packages\\microsoft.aspnetcore.authorization\\2.3.0\\microsoft.aspnetcore.authorization.2.3.0.nupkg.sha512",

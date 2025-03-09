@@ -1,17 +1,17 @@
 import {
+  Button
+} from "./chunk-BBGNVVO6.js";
+import {
   zindexutils
 } from "./chunk-DZKCEG23.js";
 import {
-  Button
-} from "./chunk-T4XI4MBW.js";
+  DomHandler
+} from "./chunk-5G7WYC4N.js";
 import {
   TimesIcon,
   WindowMaximizeIcon,
   WindowMinimizeIcon
 } from "./chunk-VM2DRL3K.js";
-import {
-  DomHandler
-} from "./chunk-5G7WYC4N.js";
 import {
   BaseComponent
 } from "./chunk-3WLPIQMQ.js";
@@ -2259,4 +2259,4 @@ export {
   Dialog,
   DialogModule
 };
-//# sourceMappingURL=chunk-SXG2757A.js.map
+//# sourceMappingURL=chunk-ZJ2YDJ6H.js.map

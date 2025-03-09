@@ -32,13 +32,13 @@ export const appConfig: ApplicationConfig = {
     FieldService,
     MessageService,
     ProjectService,
-    
+
     // Core providers
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
     provideHttpClient(),
     provideAnimations(),
-    
+
     // NgRx Store configuration
     provideStore({ router: routerReducer }),
     provideRouterStore(),
@@ -47,19 +47,27 @@ export const appConfig: ApplicationConfig = {
     provideState('messages', messageReducer),
     provideState('fields', fieldReducer),
     provideState('enumValues', enumValueReducer),
-    
+
     // Store DevTools
     provideStoreDevtools({ maxAge: 25, logOnly: !isDevMode() }),
-    
-    // Effects
-    provideEffects([
-      ProjectEffects,
-      RootEffects,
-      MessageEffects,
-      FieldEffects,
-      EnumValueEffects
-    ]),
-    
+
+    ProjectEffects,
+    RootEffects,
+    MessageEffects,
+    FieldEffects,
+    EnumValueEffects,
+    provideEffects(),
+    // In app.config.ts
+    provideStoreDevtools({
+      maxAge: 25,
+      logOnly: !isDevMode(),
+      autoPause: true,
+      trace: false,
+      traceLimit: 75,
+      connectInZone: true
+    }),
+
+
     // PrimeNG configuration
     providePrimeNG({ ripple: true })
   ]

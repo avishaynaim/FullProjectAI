@@ -114,6 +114,7 @@ export class LoginComponent implements OnInit {
 
   ngOnInit() {
     // Load projects for dropdown
+    console.log('Loading projects...');
     this.store.dispatch(ProjectActions.loadProjects());
 
     this.store.select(selectAllProjects).subscribe(projects => {
