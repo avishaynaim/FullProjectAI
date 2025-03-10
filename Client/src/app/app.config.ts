@@ -24,6 +24,10 @@ import { EnumValueService } from './services/enum-value.service';
 import { FieldService } from './services/field.service';
 import { ProjectService } from './services/project.service';
 import { ManualEffectsService } from './services/ManualEffectsService';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import Aura from '@primeng/themes/aura';
+
+
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -33,7 +37,12 @@ export const appConfig: ApplicationConfig = {
     FieldService,
     MessageService,
     ProjectService,
-
+    provideAnimationsAsync(),
+    providePrimeNG({
+        theme: {
+            preset: Aura
+        }
+    }),
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
     provideHttpClient(),
