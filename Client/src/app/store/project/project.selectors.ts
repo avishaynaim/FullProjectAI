@@ -7,6 +7,10 @@ export const selectAllProjects = createSelector(
   selectProjectState,
   state => state.projects
 );
+export const selectdummyy = createSelector(
+  selectProjectState,
+  state => state.dummy
+);
 
 export const selectCurrentProject = createSelector(
   selectProjectState,

@@ -4,7 +4,6 @@ import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { AppState } from '../../store/app.state';
-import * as ProjectActions from '../../store/project/project.actions';
 import { selectAllProjects, selectProjectsLoading } from '../../store/project/project.selectors';
 import { Project } from '../../models/project.model';
 import { CardModule } from 'primeng/card';
@@ -16,6 +15,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { SearchBoxComponent } from '../shared/search-box/search-box.component';
+import { loadProjects, updateProject, createProject, deleteProject, searchProjects } from '../../store/project/project.actions';
 
 @Component({
   selector: 'app-project-list',
@@ -200,7 +200,7 @@ export class ProjectListComponent implements OnInit {
   }
 
   loadProjects() {
-    this.store.dispatch(ProjectActions.loadProjects());
+    this.store.dispatch(loadProjects());
   }
 
   showCreateDialog() {
@@ -220,7 +220,7 @@ export class ProjectListComponent implements OnInit {
   saveProject() {
     if (this.isEditing) {
       const project = this.editingProject as Project;
-      this.store.dispatch(ProjectActions.updateProject({ project }));
+      this.store.dispatch(updateProject({ project }));
       this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Project updated successfully' });
     } else {
       const newProject: Project = {
@@ -231,7 +231,7 @@ export class ProjectListComponent implements OnInit {
         lastModifiedDate: new Date(),
         roots: []
       };
-      this.store.dispatch(ProjectActions.createProject({ project: newProject }));
+      this.store.dispatch(createProject({ project: newProject }));
       this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Project created successfully' });
     }
     this.dialogVisible = false;
@@ -243,7 +243,7 @@ export class ProjectListComponent implements OnInit {
       header: 'Confirm Delete',
       icon: 'pi pi-exclamation-triangle',
       accept: () => {
-        this.store.dispatch(ProjectActions.deleteProject({ id: project.id }));
+        this.store.dispatch(deleteProject({ id: project.id }));
         this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Project deleted successfully' });
       }
     });
@@ -251,7 +251,7 @@ export class ProjectListComponent implements OnInit {
 
   onSearch(term: string) {
     if (term) {
-      this.store.dispatch(ProjectActions.searchProjects({ term }));
+      this.store.dispatch(searchProjects({ term }));
     } else {
       this.loadProjects();
     }

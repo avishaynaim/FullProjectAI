@@ -1,84 +1,87 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { of } from 'rxjs';
 import { catchError, map, mergeMap, switchMap } from 'rxjs/operators';
 import { RootService } from '../../services/root.service';
-import * as RootActions from './root.actions';
+
 import { Store } from '@ngrx/store';
+import { loadRoots, loadRootsSuccess, loadRootsFailure, loadRoot, loadRootSuccess, loadRootFailure, loadRootsByProject, loadRootsByProjectSuccess, loadRootsByProjectFailure, createRoot, createRootSuccess, createRootFailure, updateRoot, updateRootSuccess, updateRootFailure, deleteRoot, deleteRootSuccess, deleteRootFailure, searchRoots, searchRootsSuccess, searchRootsFailure, exportRoot, exportRootSuccess, exportRootFailure, exportAllRoots, exportAllRootsSuccess, exportAllRootsFailure } from './root.actions';
 
 @Injectable()
 export class RootEffects {
-  constructor(private actions$: Actions,private rootService: RootService) {}
+    private actions$ = inject(Actions);
+    private rootService = inject(RootService);
+  constructor() {}
 
   loadRoots$ = createEffect(() => this.actions$.pipe(
-    ofType(RootActions.loadRoots),
+    ofType(loadRoots),
     switchMap(() => this.rootService.getRoots().pipe(
-      map(roots => RootActions.loadRootsSuccess({ roots })),
-      catchError(error => of(RootActions.loadRootsFailure({ error })))
+      map(roots => loadRootsSuccess({ roots })),
+      catchError(error => of(loadRootsFailure({ error })))
     ))
   ));
 
   loadRoot$ = createEffect(() => this.actions$.pipe(
-    ofType(RootActions.loadRoot),
+    ofType(loadRoot),
     switchMap(({ id }) => this.rootService.getRoot(id).pipe(
-      map(root => RootActions.loadRootSuccess({ root })),
-      catchError(error => of(RootActions.loadRootFailure({ error })))
+      map(root => loadRootSuccess({ root })),
+      catchError(error => of(loadRootFailure({ error })))
     ))
   ));
 
   loadRootsByProject$ = createEffect(() => this.actions$.pipe(
-    ofType(RootActions.loadRootsByProject),
+    ofType(loadRootsByProject),
     switchMap(({ projectId }) => this.rootService.getRootsByProject(projectId).pipe(
-      map(roots => RootActions.loadRootsByProjectSuccess({ roots })),
-      catchError(error => of(RootActions.loadRootsByProjectFailure({ error })))
+      map(roots => loadRootsByProjectSuccess({ roots })),
+      catchError(error => of(loadRootsByProjectFailure({ error })))
     ))
   ));
 
   createRoot$ = createEffect(() => this.actions$.pipe(
-    ofType(RootActions.createRoot),
+    ofType(createRoot),
     mergeMap(({ root }) => this.rootService.createRoot(root).pipe(
-      map(createdRoot => RootActions.createRootSuccess({ root: createdRoot })),
-      catchError(error => of(RootActions.createRootFailure({ error })))
+      map(createdRoot => createRootSuccess({ root: createdRoot })),
+      catchError(error => of(createRootFailure({ error })))
     ))
   ));
 
   updateRoot$ = createEffect(() => this.actions$.pipe(
-    ofType(RootActions.updateRoot),
+    ofType(updateRoot),
     mergeMap(({ root }) => this.rootService.updateRoot(root).pipe(
-      map(() => RootActions.updateRootSuccess({ root })),
-      catchError(error => of(RootActions.updateRootFailure({ error })))
+      map(() => updateRootSuccess({ root })),
+      catchError(error => of(updateRootFailure({ error })))
     ))
   ));
 
   deleteRoot$ = createEffect(() => this.actions$.pipe(
-    ofType(RootActions.deleteRoot),
+    ofType(deleteRoot),
     mergeMap(({ id }) => this.rootService.deleteRoot(id).pipe(
-      map(() => RootActions.deleteRootSuccess({ id })),
-      catchError(error => of(RootActions.deleteRootFailure({ error })))
+      map(() => deleteRootSuccess({ id })),
+      catchError(error => of(deleteRootFailure({ error })))
     ))
   ));
 
   searchRoots$ = createEffect(() => this.actions$.pipe(
-    ofType(RootActions.searchRoots),
+    ofType(searchRoots),
     switchMap(({ term }) => this.rootService.searchRoots(term).pipe(
-      map(roots => RootActions.searchRootsSuccess({ roots })),
-      catchError(error => of(RootActions.searchRootsFailure({ error })))
+      map(roots => searchRootsSuccess({ roots })),
+      catchError(error => of(searchRootsFailure({ error })))
     ))
   ));
 
   exportRoot$ = createEffect(() => this.actions$.pipe(
-    ofType(RootActions.exportRoot),
+    ofType(exportRoot),
     switchMap(({ id }) => this.rootService.exportRoot(id).pipe(
-      map(xml => RootActions.exportRootSuccess({ xml })),
-      catchError(error => of(RootActions.exportRootFailure({ error })))
+      map(xml => exportRootSuccess({ xml })),
+      catchError(error => of(exportRootFailure({ error })))
     ))
   ));
 
   exportAllRoots$ = createEffect(() => this.actions$.pipe(
-    ofType(RootActions.exportAllRoots),
+    ofType(exportAllRoots),
     switchMap(({ projectId }) => this.rootService.exportAllRoots(projectId).pipe(
-      map(xml => RootActions.exportAllRootsSuccess({ xml })),
-      catchError(error => of(RootActions.exportAllRootsFailure({ error })))
+      map(xml => exportAllRootsSuccess({ xml })),
+      catchError(error => of(exportAllRootsFailure({ error })))
     ))
   ));
 }

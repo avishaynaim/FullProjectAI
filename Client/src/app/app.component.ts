@@ -6,10 +6,10 @@ import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { SignalRService } from './services/signalr.service';
 import { AppState } from './store/app.state';
-import * as ProjectActions from './store/project/project.actions';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
 import { providePrimeNG } from 'primeng/config';
+import { ProjectEffects } from './store/project/project.effects';
 
 @Component({
   selector: 'app-root',
@@ -33,26 +33,30 @@ import { providePrimeNG } from 'primeng/config';
   `,
 })
 export class AppComponent implements OnInit {
-  constructor(
-    private signalRService: SignalRService,
-    private store: Store<AppState>,
-    private messageService: MessageService
-  ) {}
+  // constructor(
+  //   private signalRService: SignalRService,
+  //   private store: Store<AppState>,
+  //   private messageService: MessageService
+  // ) {}
+
+  constructor(private store: Store, private projectEffects: ProjectEffects) {
+    console.log('App component initialized, ensuring effects are registered');
+  }
 
   ngOnInit() {
     // this.primengConfig.ripple = true;
     
-    // Subscribe to SignalR updates
-    this.signalRService.projectUpdated$.subscribe(project => {
-      if (project) {
-        this.store.dispatch(ProjectActions.projectUpdatedFromSignalR({ project }));
-        this.messageService.add({
-          severity: 'info',
-          summary: 'Project Updated',
-          detail: `Project "${project.name}" has been updated by another user.`
-        });
-      }
-    });
+    // // Subscribe to SignalR updates
+    // this.signalRService.projectUpdated$.subscribe(project => {
+    //   if (project) {
+    //     this.store.dispatch(ProjectActions.projectUpdatedFromSignalR({ project }));
+    //     this.messageService.add({
+    //       severity: 'info',
+    //       summary: 'Project Updated',
+    //       detail: `Project "${project.name}" has been updated by another user.`
+    //     });
+    //   }
+    // });
     
     // Add similar subscriptions for other entities
   }

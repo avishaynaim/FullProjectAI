@@ -5,8 +5,6 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { Subject, takeUntil } from 'rxjs';
 import { AppState } from '../../store/app.state';
-import * as ProjectActions from '../../store/project/project.actions';
-import * as RootActions from '../../store/root/root.actions';
 import { selectProjectById } from '../../store/project/project.selectors';
 import { selectRootsByProjectId } from '../../store/root/root.selectors';
 import { Root } from '../../models/root.model';
@@ -23,7 +21,10 @@ import { MessageService, ConfirmationService } from 'primeng/api';
 import { BreadcrumbComponent } from '../shared/breadcrumb/breadcrumb.component';
 import { SearchBoxComponent } from '../shared/search-box/search-box.component';
 import { SignalRService } from '../../services/signalr.service';
-import { Project } from './project.model';
+import { Project } from '../../models/project.model';
+import { loadProject } from '../../store/project/project.actions';
+import { loadRootsByProject, deleteRoot, exportRoot, exportAllRoots, updateRoot, createRoot } from '../../store/root/root.actions';
+
 
 @Component({
   selector: 'app-project-detail',
@@ -334,10 +335,10 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
       this.projectId = params['id'];
       
       // Load project details
-      this.store.dispatch(ProjectActions.loadProject({ id: this.projectId }));
+      this.store.dispatch(loadProject({ id: this.projectId }));
       
       // Load roots for this project
-      this.store.dispatch(RootActions.loadRootsByProject({ projectId: this.projectId }));
+      this.store.dispatch(loadRootsByProject({ projectId: this.projectId }));
       
       // Join SignalR group for this project
       this.signalRService.joinProject(this.projectId);
@@ -506,7 +507,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
       accept: () => {
         switch (type) {
           case 'root':
-            this.store.dispatch(RootActions.deleteRoot({ id: this.selectedNode!.key }));
+            this.store.dispatch(deleteRoot({ id: this.selectedNode!.key }));
             break;
           // Will add message and field deletion later
         }
@@ -523,7 +524,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     
     switch (this.selectedNode.type) {
       case 'root':
-        this.store.dispatch(RootActions.exportRoot({ id: this.selectedNode.key }));
+        this.store.dispatch(exportRoot({ id: this.selectedNode.key }));
         break;
       // Will add message and field export later
     }
@@ -542,7 +543,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
   exportAllRoots() {
     if (!this.projectId) return;
     
-    this.store.dispatch(RootActions.exportAllRoots({ projectId: this.projectId }));
+    this.store.dispatch(exportAllRoots({ projectId: this.projectId }));
     
     // Subscribe to the exported XML
     this.store.select(state => state.roots.exportedXml).pipe(
@@ -584,7 +585,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
   saveRoot() {
     if (this.isEditingRoot) {
       const root = this.editingRoot as Root;
-      this.store.dispatch(RootActions.updateRoot({ root }));
+      this.store.dispatch(updateRoot({ root }));
       this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Root updated successfully' });
     } else {
       const newRoot: Root = {
@@ -596,7 +597,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
         lastModifiedDate: new Date(),
         messages: []
       };
-      this.store.dispatch(RootActions.createRoot({ root: newRoot }));
+      this.store.dispatch(createRoot({ root: newRoot }));
       this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Root created successfully' });
     }
     this.rootDialogVisible = false;
@@ -608,7 +609,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
       header: 'Confirm Delete',
       icon: 'pi pi-exclamation-triangle',
       accept: () => {
-        this.store.dispatch(RootActions.deleteRoot({ id: root.id }));
+        this.store.dispatch(deleteRoot({ id: root.id }));
         this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Root deleted successfully' });
       }
     });

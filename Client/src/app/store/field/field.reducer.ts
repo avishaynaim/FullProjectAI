@@ -1,6 +1,6 @@
 import { createReducer, on } from '@ngrx/store';
 import { Field } from '../../models/field.model';
-import * as FieldActions from './field.actions';
+import { loadFields, loadFieldsSuccess, loadFieldsFailure, loadField, loadFieldSuccess, loadFieldFailure, loadFieldsByMessage, loadFieldsByMessageSuccess, loadFieldsByMessageFailure, loadFieldsByParent, loadFieldsByParentSuccess, loadFieldsByParentFailure, createFieldSuccess, createFieldFailure, updateFieldSuccess, updateFieldFailure, deleteFieldSuccess, deleteFieldFailure, searchFieldsSuccess, searchFieldsFailure, exportFieldSuccess, exportFieldFailure, fieldUpdatedFromSignalR, fieldDeletedFromSignalR } from './field.actions';
 
 export interface FieldState {
   fields: Field[];
@@ -24,67 +24,67 @@ export const initialState: FieldState = {
 
 export const fieldReducer = createReducer(
   initialState,
-  on(FieldActions.loadFields, state => ({
+  on(loadFields, state => ({
     ...state,
     loading: true
   })),
-  on(FieldActions.loadFieldsSuccess, (state, { fields }) => ({
+  on(loadFieldsSuccess, (state, { fields }) => ({
     ...state,
     fields,
     loading: false,
     error: null
   })),
-  on(FieldActions.loadFieldsFailure, (state, { error }) => ({
+  on(loadFieldsFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  on(FieldActions.loadField, state => ({
+  on(loadField, state => ({
     ...state,
     loading: true
   })),
-  on(FieldActions.loadFieldSuccess, (state, { field }) => ({
+  on(loadFieldSuccess, (state, { field }) => ({
     ...state,
     currentField: field,
     loading: false,
     error: null
   })),
-  on(FieldActions.loadFieldFailure, (state, { error }) => ({
+  on(loadFieldFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  on(FieldActions.loadFieldsByMessage, state => ({
+  on(loadFieldsByMessage, state => ({
     ...state,
     loading: true
   })),
-  on(FieldActions.loadFieldsByMessageSuccess, (state, { fields }) => ({
+  on(loadFieldsByMessageSuccess, (state, { fields }) => ({
     ...state,
     messageFields: fields,
     loading: false,
     error: null
   })),
-  on(FieldActions.loadFieldsByMessageFailure, (state, { error }) => ({
+  on(loadFieldsByMessageFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  on(FieldActions.loadFieldsByParent, state => ({
+  on(loadFieldsByParent, state => ({
     ...state,
     loading: true
   })),
-  on(FieldActions.loadFieldsByParentSuccess, (state, { fields }) => ({
+  on(loadFieldsByParentSuccess, (state, { fields }) => ({
     ...state,
     childFields: fields,
     loading: false,
     error: null
   })),
-  on(FieldActions.loadFieldsByParentFailure, (state, { error }) => ({
+  on(loadFieldsByParentFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  on(FieldActions.createFieldSuccess, (state, { field }) => {
+  on(createFieldSuccess, (state, { field }) => {
     // Determine which collections to update
     let messageFields = state.messageFields;
     let childFields = state.childFields;
@@ -114,12 +114,12 @@ export const fieldReducer = createReducer(
       error: null
     };
   }),
-  on(FieldActions.createFieldFailure, (state, { error }) => ({
+  on(createFieldFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  on(FieldActions.updateFieldSuccess, (state, { field }) => ({
+  on(updateFieldSuccess, (state, { field }) => ({
     ...state,
     fields: state.fields.map(f => f.id === field.id ? field : f),
     messageFields: state.messageFields.map(f => f.id === field.id ? field : f),
@@ -128,12 +128,12 @@ export const fieldReducer = createReducer(
     loading: false,
     error: null
   })),
-  on(FieldActions.updateFieldFailure, (state, { error }) => ({
+  on(updateFieldFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  on(FieldActions.deleteFieldSuccess, (state, { id }) => ({
+  on(deleteFieldSuccess, (state, { id }) => ({
     ...state,
     fields: state.fields.filter(f => f.id !== id),
     messageFields: state.messageFields.filter(f => f.id !== id),
@@ -142,34 +142,34 @@ export const fieldReducer = createReducer(
     loading: false,
     error: null
   })),
-  on(FieldActions.deleteFieldFailure, (state, { error }) => ({
+  on(deleteFieldFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  on(FieldActions.searchFieldsSuccess, (state, { fields }) => ({
+  on(searchFieldsSuccess, (state, { fields }) => ({
     ...state,
     fields,
     loading: false,
     error: null
   })),
-  on(FieldActions.searchFieldsFailure, (state, { error }) => ({
+  on(searchFieldsFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  on(FieldActions.exportFieldSuccess, (state, { xml }) => ({
+  on(exportFieldSuccess, (state, { xml }) => ({
     ...state,
     exportedXml: xml,
     loading: false,
     error: null
   })),
-  on(FieldActions.exportFieldFailure, (state, { error }) => ({
+  on(exportFieldFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  on(FieldActions.fieldUpdatedFromSignalR, (state, { field }) => ({
+  on(fieldUpdatedFromSignalR, (state, { field }) => ({
     ...state,
     fields: state.fields.some(f => f.id === field.id) 
       ? state.fields.map(f => f.id === field.id ? field : f) 
@@ -190,7 +190,7 @@ export const fieldReducer = createReducer(
       : state.childFields,
     currentField: state.currentField?.id === field.id ? field : state.currentField
   })),
-  on(FieldActions.fieldDeletedFromSignalR, (state, { id }) => ({
+  on(fieldDeletedFromSignalR, (state, { id }) => ({
     ...state,
     fields: state.fields.filter(f => f.id !== id),
     messageFields: state.messageFields.filter(f => f.id !== id),

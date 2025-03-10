@@ -5,7 +5,6 @@ import { FormsModule } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { Subject, takeUntil } from 'rxjs';
 import { AppState } from '../../store/app.state';
-import * as RootActions from '../../store/root/root.actions';
 import { selectRootById } from '../../store/root/root.selectors';
 import { Root } from '../../models/root.model';
 import { Message } from '../../models/message.model';
@@ -20,7 +19,8 @@ import { BreadcrumbComponent } from '../shared/breadcrumb/breadcrumb.component';
 import { SearchBoxComponent } from '../shared/search-box/search-box.component';
 import { SignalRService } from '../../services/signalr.service';
 import { Breadcrumb } from '../../models/breadcrumb.model';
-import * as MessageActions from '../../store//message/message.actions'
+import { updateMessage, createMessage, deleteMessage } from '../../store/message/message.actions';
+import { exportRoot, loadRoot, updateRoot } from '../../store/root/root.actions';
 
 @Component({
   selector: 'app-root-detail',
@@ -349,7 +349,7 @@ export class RootDetailComponent implements OnInit, OnDestroy {
       this.rootId = params['id'];
       
       // Load root details
-      this.store.dispatch(RootActions.loadRoot({ id: this.rootId }));
+      this.store.dispatch(loadRoot({ id: this.rootId }));
       
       // Subscribe to root data
       this.store.select(selectRootById(this.rootId)).pipe(
@@ -399,7 +399,7 @@ export class RootDetailComponent implements OnInit, OnDestroy {
       lastModifiedDate: new Date()
     };
     
-    this.store.dispatch(RootActions.updateRoot({ root: updatedRoot }));
+    this.store.dispatch(updateRoot({ root: updatedRoot }));
     this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Root updated successfully' });
     this.rootDialogVisible = false;
   }
@@ -428,7 +428,7 @@ export class RootDetailComponent implements OnInit, OnDestroy {
         lastModifiedDate: new Date()
       };
       
-      this.store.dispatch(MessageActions.updateMessage({ message: updatedMessage }));
+      this.store.dispatch(updateMessage({ message: updatedMessage }));
       this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Message updated successfully' });
     } else {
       // Create new message
@@ -442,7 +442,7 @@ export class RootDetailComponent implements OnInit, OnDestroy {
         fields: []
       };
       
-      this.store.dispatch(MessageActions.createMessage({ message: newMessage }));
+      this.store.dispatch(createMessage({ message: newMessage }));
       this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Message created successfully' });
     }
     
@@ -455,7 +455,7 @@ export class RootDetailComponent implements OnInit, OnDestroy {
       header: 'Confirm Delete',
       icon: 'pi pi-exclamation-triangle',
       accept: () => {
-        this.store.dispatch(MessageActions.deleteMessage({ id: message.id }));
+        this.store.dispatch(deleteMessage({ id: message.id }));
         this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Message deleted successfully' });
       }
     });
@@ -464,7 +464,7 @@ export class RootDetailComponent implements OnInit, OnDestroy {
   exportRoot() {
     if (!this.rootId) return;
     
-    this.store.dispatch(RootActions.exportRoot({ id: this.rootId }));
+    this.store.dispatch(exportRoot({ id: this.rootId }));
     
     // Subscribe to the exported XML
     this.store.select(state => state.roots.exportedXml).pipe(

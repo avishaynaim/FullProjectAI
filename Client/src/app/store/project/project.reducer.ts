@@ -1,107 +1,112 @@
 import { createReducer, on } from '@ngrx/store';
-import * as ProjectActions from './project.actions';
-import { Project } from '../../components/project/project.model';
+import { Project } from '../../models/project.model';
+import { loadProjects, loadProjectsSuccess, loadProjectsFailure, loadProject, loadProjectSuccess, loadProjectFailure, createProjectSuccess, createProjectFailure, updateProjectSuccess, updateProjectFailure, deleteProjectSuccess, deleteProjectFailure, searchProjectsSuccess, searchProjectsFailure, projectUpdatedFromSignalR, projectDeletedFromSignalR } from './project.actions';
 
 export interface ProjectState {
   projects: Project[];
   currentProject: Project | null;
   loading: boolean;
   error: any;
+  dummy: string;
 }
 
 export const initialState: ProjectState = {
   projects: [],
   currentProject: null,
   loading: false,
-  error: null
+  error: null,
+  dummy:'moshe'
 };
 
 export const projectReducer = createReducer(
   initialState,
-  on(ProjectActions.loadProjects, state => ({
+  on(loadProjects, state => {
+    console.log('Reducer: loadProjects action received');
+    return({
     ...state,
+    dummy:'david',
     loading: true
-  })),
-  on(ProjectActions.loadProjectsSuccess, (state, { projects }) => ({
+  })}),
+  on(loadProjectsSuccess, (state, { projects }) => ({
     ...state,
     projects,
     loading: false,
     error: null
   })),
-  on(ProjectActions.loadProjectsFailure, (state, { error }) => ({
+  on(loadProjectsFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  on(ProjectActions.loadProject, state => ({
+  on(loadProject, state => ({
     ...state,
     loading: true
   })),
-  on(ProjectActions.loadProjectSuccess, (state, { project }) => ({
+  on(loadProjectSuccess, (state, { project }) => ({
     ...state,
     currentProject: project,
     loading: false,
     error: null
   })),
-  on(ProjectActions.loadProjectFailure, (state, { error }) => ({
+  on(loadProjectFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  on(ProjectActions.createProjectSuccess, (state, { project }) => ({
+  on(createProjectSuccess, (state, { project }) => ({
     ...state,
     projects: [...state.projects, project],
     loading: false,
     error: null
   })),
-  on(ProjectActions.createProjectFailure, (state, { error }) => ({
+  on(createProjectFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  on(ProjectActions.updateProjectSuccess, (state, { project }) => ({
+  on(updateProjectSuccess, (state, { project }) => ({
     ...state,
     projects: state.projects.map(p => p.id === project.id ? project : p),
     currentProject: state.currentProject?.id === project.id ? project : state.currentProject,
     loading: false,
     error: null
   })),
-  on(ProjectActions.updateProjectFailure, (state, { error }) => ({
+  on(updateProjectFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  on(ProjectActions.deleteProjectSuccess, (state, { id }) => ({
+  on(deleteProjectSuccess, (state, { id }) => ({
     ...state,
     projects: state.projects.filter(p => p.id !== id),
     currentProject: state.currentProject?.id === id ? null : state.currentProject,
     loading: false,
     error: null
   })),
-  on(ProjectActions.deleteProjectFailure, (state, { error }) => ({
+  on(deleteProjectFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  on(ProjectActions.searchProjectsSuccess, (state, { projects }) => ({
+  on(searchProjectsSuccess, (state, { projects }) => ({
     ...state,
     projects,
     loading: false,
     error: null
   })),
-  on(ProjectActions.searchProjectsFailure, (state, { error }) => ({
+  on(searchProjectsFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  on(ProjectActions.projectUpdatedFromSignalR, (state, { project }) => ({
+  on(projectUpdatedFromSignalR, (state, { project }) => ({
     ...state,
     projects: state.projects.some(p => p.id === project.id) 
       ? state.projects.map(p => p.id === project.id ? project : p) 
       : [...state.projects, project],
     currentProject: state.currentProject?.id === project.id ? project : state.currentProject
   })),
-  on(ProjectActions.projectDeletedFromSignalR, (state, { id }) => ({
+  on(projectDeletedFromSignalR, (state, { id }) => ({
     ...state,
     projects: state.projects.filter(p => p.id !== id),
     currentProject: state.currentProject?.id === id ? null : state.currentProject

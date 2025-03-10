@@ -1,1 +1,0 @@
-import{Qd as t,Rd as o}from"./chunk-KTDYQ5NR.js";var r=o("projects"),l=t(r,e=>e.projects),j=t(r,e=>e.currentProject),p=t(r,e=>e.loading),P=t(r,e=>e.error),a=e=>t(l,c=>c.find(s=>s.id===e)||null);export{l as a,p as b,a as c};

@@ -6,6 +6,15 @@ export const routes: Routes = [
     redirectTo: 'login',
     pathMatch: 'full'
   },
+
+  {
+    path: 'ngrx-diagnostic',
+    loadComponent: () => import('./components/NgRxDiagnosticComponent').then(m => m.NgRxDiagnosticComponent)
+  },
+  {
+    path: 'diagnostic',
+    loadComponent: () => import('./components/diagnostic/diagnostic.component').then(m => m.DiagnosticComponent)
+  },
   {
     path: 'login',
     loadComponent: () => import('./components/login/login.component').then(m => m.LoginComponent)

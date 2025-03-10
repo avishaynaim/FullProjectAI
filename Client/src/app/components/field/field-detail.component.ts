@@ -16,8 +16,6 @@ import { ToastModule } from 'primeng/toast';
 import { TagModule } from 'primeng/tag';
 
 import { AppState } from '../../store/app.state';
-import * as FieldActions from '../../store/field/field.actions';
-import * as EnumValueActions from '../../store/enum-value/enum-value.actions';
 import { selectFieldById } from '../../store/field/field.selectors';
 import { Field, FieldType } from '../../models/field.model';
 import { EnumValue } from '../../models/enum-value.model';
@@ -26,6 +24,8 @@ import { BreadcrumbComponent } from '../shared/breadcrumb/breadcrumb.component';
 import { SearchBoxComponent } from '../shared/search-box/search-box.component';
 import { FieldFormComponent } from '../field/field-components';
 import { SignalRService } from '../../services/signalr.service';
+import { loadField, updateField, createField, deleteField, exportField } from '../../store/field/field.actions';
+import { updateEnumValue, deleteEnumValue } from '../../store/enum-value/enum-value.actions';
 
 @Component({
   selector: 'app-field-detail',
@@ -447,7 +447,7 @@ export class FieldDetailComponent implements OnInit, OnDestroy {
       this.fieldId = params['id'];
       
       // Load field details
-      this.store.dispatch(FieldActions.loadField({ id: this.fieldId }));
+      this.store.dispatch(loadField({ id: this.fieldId }));
       
       // Subscribe to field data
       this.store.select(selectFieldById(this.fieldId)).pipe(
@@ -562,7 +562,7 @@ export class FieldDetailComponent implements OnInit, OnDestroy {
   }
 
   onFieldFormSubmit(field: Field) {
-    this.store.dispatch(FieldActions.updateField({ field }));
+    this.store.dispatch(updateField({ field }));
     this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Field updated successfully' });
     this.fieldDialogVisible = false;
   }
@@ -582,11 +582,11 @@ export class FieldDetailComponent implements OnInit, OnDestroy {
   onChildFieldFormSubmit(field: Field) {
     if (this.selectedChildField) {
       // Update
-      this.store.dispatch(FieldActions.updateField({ field: { ...field, id: this.selectedChildField.id } }));
+      this.store.dispatch(updateField({ field: { ...field, id: this.selectedChildField.id } }));
       this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Child field updated successfully' });
     } else {
       // Create
-      this.store.dispatch(FieldActions.createField({ 
+      this.store.dispatch(createField({ 
         field: { 
           ...field, 
           parentFieldId: this.fieldId,
@@ -604,7 +604,7 @@ export class FieldDetailComponent implements OnInit, OnDestroy {
       header: 'Confirm Delete',
       icon: 'pi pi-exclamation-triangle',
       accept: () => {
-        this.store.dispatch(FieldActions.deleteField({ id: childField.id }));
+        this.store.dispatch(deleteField({ id: childField.id }));
         this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Field deleted successfully' });
       }
     });
@@ -618,7 +618,7 @@ export class FieldDetailComponent implements OnInit, OnDestroy {
 
   saveEnumValue() {
     if (this.selectedEnumValue) {
-      this.store.dispatch(EnumValueActions.updateEnumValue({ enumValue: this.selectedEnumValue }));
+      this.store.dispatch(updateEnumValue({ enumValue: this.selectedEnumValue }));
       this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Enum value updated successfully' });
       this.enumValueDialogVisible = false;
     }
@@ -630,7 +630,7 @@ export class FieldDetailComponent implements OnInit, OnDestroy {
       header: 'Confirm Delete',
       icon: 'pi pi-exclamation-triangle',
       accept: () => {
-        this.store.dispatch(EnumValueActions.deleteEnumValue({ id: enumValue.id }));
+        this.store.dispatch(deleteEnumValue({ id: enumValue.id }));
         this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Enum value deleted successfully' });
       }
     });
@@ -639,7 +639,7 @@ export class FieldDetailComponent implements OnInit, OnDestroy {
   exportField() {
     if (!this.fieldId) return;
     
-    this.store.dispatch(FieldActions.exportField({ id: this.fieldId }));
+    this.store.dispatch(exportField({ id: this.fieldId }));
     
     // Subscribe to the exported XML
     this.store.select(state => state.fields.exportedXml).pipe(

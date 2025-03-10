@@ -16,8 +16,6 @@ import { TreeTableModule } from 'primeng/treetable';
 import { TreeNode } from 'primeng/api';
 
 import { AppState } from '../../store/app.state';
-import * as MessageActions from '../../store/message/message.actions';
-import * as FieldActions from '../../store/field/field.actions';
 import { selectMessageById } from '../../store/message/message.selectors';
 import { Message } from '../../models/message.model';
 import { Field, FieldType } from '../../models/field.model';
@@ -29,6 +27,8 @@ import { SignalRService } from '../../services/signalr.service';
 import { MessageFormComponent } from '../message/message-components';
 import { FieldFormComponent } from '../field/field-components';
 import { FormsModule } from '@angular/forms';
+import { updateField, createField, deleteField } from '../../store/field/field.actions';
+import { exportMessage, loadMessage } from '../../store/message/message.actions';
 
 @Component({
   selector: 'app-message-detail',
@@ -297,7 +297,7 @@ export class MessageDetailComponent implements OnInit, OnDestroy {
       this.messageId = params['id'];
       
       // Load message details
-      this.store.dispatch(MessageActions.loadMessage({ id: this.messageId }));
+      this.store.dispatch(loadMessage({ id: this.messageId }));
       
       // Subscribe to message data
       this.store.select(selectMessageById(this.messageId)).pipe(
@@ -378,7 +378,7 @@ export class MessageDetailComponent implements OnInit, OnDestroy {
   }
 
   onMessageFormSubmit(message: Message) {
-    this.store.dispatch(MessageActions.updateMessage({ message }));
+    this.store.dispatch(updateMessage({ message }));
     this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Message updated successfully' });
     this.messageDialogVisible = false;
   }
@@ -398,11 +398,11 @@ export class MessageDetailComponent implements OnInit, OnDestroy {
   onFieldFormSubmit(field: Field) {
     if (this.selectedField) {
       // Update
-      this.store.dispatch(FieldActions.updateField({ field: { ...field, id: this.selectedField.id } }));
+      this.store.dispatch(updateField({ field: { ...field, id: this.selectedField.id } }));
       this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Field updated successfully' });
     } else {
       // Create
-      this.store.dispatch(FieldActions.createField({ 
+      this.store.dispatch(createField({ 
         field: { 
           ...field, 
           messageId: this.messageId,
@@ -420,7 +420,7 @@ export class MessageDetailComponent implements OnInit, OnDestroy {
       header: 'Confirm Delete',
       icon: 'pi pi-exclamation-triangle',
       accept: () => {
-        this.store.dispatch(FieldActions.deleteField({ id: field.id }));
+        this.store.dispatch(deleteField({ id: field.id }));
         this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Field deleted successfully' });
       }
     });
@@ -429,7 +429,7 @@ export class MessageDetailComponent implements OnInit, OnDestroy {
   exportMessage() {
     if (!this.messageId) return;
     
-    this.store.dispatch(MessageActions.exportMessage({ id: this.messageId }));
+    this.store.dispatch(exportMessage({ id: this.messageId }));
     
     // Subscribe to the exported XML
     this.store.select(state => state.messages.exportedXml).pipe(
@@ -462,3 +462,7 @@ export class MessageDetailComponent implements OnInit, OnDestroy {
     // TODO: Reset search results
   }
 }
+function updateMessage(arg0: { message: Message; }): any {
+  throw new Error('Function not implemented.');
+}
+

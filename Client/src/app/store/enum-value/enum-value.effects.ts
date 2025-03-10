@@ -1,70 +1,70 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { of } from 'rxjs';
 import { catchError, map, mergeMap, switchMap } from 'rxjs/operators';
 import { EnumValueService } from '../../services/enum-value.service';
-import * as EnumValueActions from './enum-value.actions';
+import { loadEnumValues, loadEnumValuesSuccess, loadEnumValuesFailure, loadEnumValue, loadEnumValueSuccess, loadEnumValueFailure, loadEnumValuesByField, loadEnumValuesByFieldSuccess, loadEnumValuesByFieldFailure, createEnumValue, createEnumValueSuccess, createEnumValueFailure, updateEnumValue, updateEnumValueSuccess, updateEnumValueFailure, deleteEnumValue, deleteEnumValueSuccess, deleteEnumValueFailure, searchEnumValues, searchEnumValuesSuccess, searchEnumValuesFailure } from './enum-value.actions';
 
 @Injectable()
 export class EnumValueEffects {
+  constructor(  ) {}
+  private actions$ = inject(Actions);
+  private enumValueService = inject(EnumValueService);
   loadEnumValues$ = createEffect(() => this.actions$?.pipe(
-    ofType(EnumValueActions.loadEnumValues),
+    ofType(loadEnumValues),
     switchMap(() => this.enumValueService.getEnumValues().pipe(
-      map(enumValues => EnumValueActions.loadEnumValuesSuccess({ enumValues })),
-      catchError(error => of(EnumValueActions.loadEnumValuesFailure({ error })))
+      map(enumValues => loadEnumValuesSuccess({ enumValues })),
+      catchError(error => of(loadEnumValuesFailure({ error })))
     ))
   ));
 
   loadEnumValue$ = createEffect(() => this.actions$?.pipe(
-    ofType(EnumValueActions.loadEnumValue),
+    ofType(loadEnumValue),
     switchMap(({ id }) => this.enumValueService.getEnumValue(id).pipe(
-      map(enumValue => EnumValueActions.loadEnumValueSuccess({ enumValue })),
-      catchError(error => of(EnumValueActions.loadEnumValueFailure({ error })))
+      map(enumValue => loadEnumValueSuccess({ enumValue })),
+      catchError(error => of(loadEnumValueFailure({ error })))
     ))
   ));
 
   loadEnumValuesByField$ = createEffect(() => this.actions$?.pipe(
-    ofType(EnumValueActions.loadEnumValuesByField),
+    ofType(loadEnumValuesByField),
     switchMap(({ fieldId }) => this.enumValueService.getEnumValuesByField(fieldId).pipe(
-      map(enumValues => EnumValueActions.loadEnumValuesByFieldSuccess({ enumValues })),
-      catchError(error => of(EnumValueActions.loadEnumValuesByFieldFailure({ error })))
+      map(enumValues => loadEnumValuesByFieldSuccess({ enumValues })),
+      catchError(error => of(loadEnumValuesByFieldFailure({ error })))
     ))
   ));
 
   createEnumValue$ = createEffect(() => this.actions$?.pipe(
-    ofType(EnumValueActions.createEnumValue),
+    ofType(createEnumValue),
     mergeMap(({ enumValue }) => this.enumValueService.createEnumValue(enumValue).pipe(
-      map(createdEnumValue => EnumValueActions.createEnumValueSuccess({ enumValue: createdEnumValue })),
-      catchError(error => of(EnumValueActions.createEnumValueFailure({ error })))
+      map(createdEnumValue => createEnumValueSuccess({ enumValue: createdEnumValue })),
+      catchError(error => of(createEnumValueFailure({ error })))
     ))
   ));
 
   updateEnumValue$ = createEffect(() => this.actions$?.pipe(
-    ofType(EnumValueActions.updateEnumValue),
+    ofType(updateEnumValue),
     mergeMap(({ enumValue }) => this.enumValueService.updateEnumValue(enumValue).pipe(
-      map(() => EnumValueActions.updateEnumValueSuccess({ enumValue })),
-      catchError(error => of(EnumValueActions.updateEnumValueFailure({ error })))
+      map(() => updateEnumValueSuccess({ enumValue })),
+      catchError(error => of(updateEnumValueFailure({ error })))
     ))
   ));
 
   deleteEnumValue$ = createEffect(() => this.actions$?.pipe(
-    ofType(EnumValueActions.deleteEnumValue),
+    ofType(deleteEnumValue),
     mergeMap(({ id }) => this.enumValueService.deleteEnumValue(id).pipe(
-      map(() => EnumValueActions.deleteEnumValueSuccess({ id })),
-      catchError(error => of(EnumValueActions.deleteEnumValueFailure({ error })))
+      map(() => deleteEnumValueSuccess({ id })),
+      catchError(error => of(deleteEnumValueFailure({ error })))
     ))
   ));
 
   searchEnumValues$ = createEffect(() => this.actions$?.pipe(
-    ofType(EnumValueActions.searchEnumValues),
+    ofType(searchEnumValues),
     switchMap(({ term }) => this.enumValueService.searchEnumValues(term).pipe(
-      map(enumValues => EnumValueActions.searchEnumValuesSuccess({ enumValues })),
-      catchError(error => of(EnumValueActions.searchEnumValuesFailure({ error })))
+      map(enumValues => searchEnumValuesSuccess({ enumValues })),
+      catchError(error => of(searchEnumValuesFailure({ error })))
     ))
   ));
 
-  constructor(
-    private actions$: Actions,
-    private enumValueService: EnumValueService
-  ) {}
+ 
 }

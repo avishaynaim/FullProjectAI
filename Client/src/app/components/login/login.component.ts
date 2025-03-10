@@ -9,9 +9,10 @@ import { SelectModule } from 'primeng/select';
 import { ButtonModule } from 'primeng/button';
 import { Store } from '@ngrx/store';
 import { AppState } from '../../store/app.state';
-import * as ProjectActions from '../../store/project/project.actions';
 import { selectAllProjects } from '../../store/project/project.selectors';
-import { Project } from '../project/project.model';
+import { Project } from '../../models/project.model';
+import { loadProjects } from '../../store/project/project.actions';
+
 
 @Component({
   selector: 'app-login',
@@ -115,13 +116,21 @@ export class LoginComponent implements OnInit {
   ngOnInit() {
     // Load projects for dropdown
     console.log('Loading projects...');
-    this.store.dispatch(ProjectActions.loadProjects());
+    this.dispatchLoadProjects();
 
     this.store.select(selectAllProjects).subscribe(projects => {
+      console.log('Projects loaded:', projects);
+      
       this.projects = projects;
     });
   }
-
+// In your component
+dispatchLoadProjects() {
+  const action = loadProjects();
+  console.log('Dispatching action type:', action.type);
+  console.log('Expected action type constant:', loadProjects.type);
+  this.store.dispatch(action);
+}
   onSubmit() {
     if (this.loginForm.valid) {
       const selectedProject = this.loginForm.get('project')?.value;

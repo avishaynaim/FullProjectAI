@@ -27,6 +27,7 @@ namespace TreeViewApp.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Project>>> GetProjects()
         {
+            Console.WriteLine("GetProjects");  
             return Ok(await _projectRepository.GetAllAsync());
         }
         

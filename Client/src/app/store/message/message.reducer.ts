@@ -1,6 +1,6 @@
 import { createReducer, on } from '@ngrx/store';
 import { Message } from '../../models/message.model';
-import * as MessageActions from './message.actions';
+import { loadMessages, loadMessagesSuccess, loadMessagesFailure, loadMessage, loadMessageSuccess, loadMessageFailure, loadMessagesByRoot, loadMessagesByRootSuccess, loadMessagesByRootFailure, createMessageSuccess, createMessageFailure, updateMessageSuccess, updateMessageFailure, deleteMessageSuccess, deleteMessageFailure, searchMessagesSuccess, searchMessagesFailure, exportMessageSuccess, exportMessageFailure, messageUpdatedFromSignalR, messageDeletedFromSignalR } from './message.actions';
 
 export interface MessageState {
   messages: Message[];
@@ -22,52 +22,52 @@ export const initialState: MessageState = {
 
 export const messageReducer = createReducer(
   initialState,
-  on(MessageActions.loadMessages, state => ({
+  on(loadMessages, state => ({
     ...state,
     loading: true
   })),
-  on(MessageActions.loadMessagesSuccess, (state, { messages }) => ({
+  on(loadMessagesSuccess, (state, { messages }) => ({
     ...state,
     messages,
     loading: false,
     error: null
   })),
-  on(MessageActions.loadMessagesFailure, (state, { error }) => ({
+  on(loadMessagesFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  on(MessageActions.loadMessage, state => ({
+  on(loadMessage, state => ({
     ...state,
     loading: true
   })),
-  on(MessageActions.loadMessageSuccess, (state, { message }) => ({
+  on(loadMessageSuccess, (state, { message }) => ({
     ...state,
     currentMessage: message,
     loading: false,
     error: null
   })),
-  on(MessageActions.loadMessageFailure, (state, { error }) => ({
+  on(loadMessageFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  on(MessageActions.loadMessagesByRoot, state => ({
+  on(loadMessagesByRoot, state => ({
     ...state,
     loading: true
   })),
-  on(MessageActions.loadMessagesByRootSuccess, (state, { messages }) => ({
+  on(loadMessagesByRootSuccess, (state, { messages }) => ({
     ...state,
     rootMessages: messages,
     loading: false,
     error: null
   })),
-  on(MessageActions.loadMessagesByRootFailure, (state, { error }) => ({
+  on(loadMessagesByRootFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  on(MessageActions.createMessageSuccess, (state, { message }) => ({
+  on(createMessageSuccess, (state, { message }) => ({
     ...state,
     messages: [...state.messages, message],
     rootMessages: message.rootId === state.rootMessages[0]?.rootId 
@@ -76,12 +76,12 @@ export const messageReducer = createReducer(
     loading: false,
     error: null
   })),
-  on(MessageActions.createMessageFailure, (state, { error }) => ({
+  on(createMessageFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  on(MessageActions.updateMessageSuccess, (state, { message }) => ({
+  on(updateMessageSuccess, (state, { message }) => ({
     ...state,
     messages: state.messages.map(m => m.id === message.id ? message : m),
     rootMessages: state.rootMessages.map(m => m.id === message.id ? message : m),
@@ -89,12 +89,12 @@ export const messageReducer = createReducer(
     loading: false,
     error: null
   })),
-  on(MessageActions.updateMessageFailure, (state, { error }) => ({
+  on(updateMessageFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  on(MessageActions.deleteMessageSuccess, (state, { id }) => ({
+  on(deleteMessageSuccess, (state, { id }) => ({
     ...state,
     messages: state.messages.filter(m => m.id !== id),
     rootMessages: state.rootMessages.filter(m => m.id !== id),
@@ -102,34 +102,34 @@ export const messageReducer = createReducer(
     loading: false,
     error: null
   })),
-  on(MessageActions.deleteMessageFailure, (state, { error }) => ({
+  on(deleteMessageFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  on(MessageActions.searchMessagesSuccess, (state, { messages }) => ({
+  on(searchMessagesSuccess, (state, { messages }) => ({
     ...state,
     messages,
     loading: false,
     error: null
   })),
-  on(MessageActions.searchMessagesFailure, (state, { error }) => ({
+  on(searchMessagesFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  on(MessageActions.exportMessageSuccess, (state, { xml }) => ({
+  on(exportMessageSuccess, (state, { xml }) => ({
     ...state,
     exportedXml: xml,
     loading: false,
     error: null
   })),
-  on(MessageActions.exportMessageFailure, (state, { error }) => ({
+  on(exportMessageFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  on(MessageActions.messageUpdatedFromSignalR, (state, { message }) => ({
+  on(messageUpdatedFromSignalR, (state, { message }) => ({
     ...state,
     messages: state.messages.some(m => m.id === message.id) 
       ? state.messages.map(m => m.id === message.id ? message : m) 
@@ -141,7 +141,7 @@ export const messageReducer = createReducer(
       : state.rootMessages,
     currentMessage: state.currentMessage?.id === message.id ? message : state.currentMessage
   })),
-  on(MessageActions.messageDeletedFromSignalR, (state, { id }) => ({
+  on(messageDeletedFromSignalR, (state, { id }) => ({
     ...state,
     messages: state.messages.filter(m => m.id !== id),
     rootMessages: state.rootMessages.filter(m => m.id !== id),

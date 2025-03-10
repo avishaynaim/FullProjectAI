@@ -6,8 +6,7 @@ import { Root } from '../models/root.model';
 import { Message } from '../models/message.model';
 import { Field } from '../models/field.model';
 import { EnumValue } from '../models/enum-value.model';
-import { Project } from '../components/project/project.model';
-
+import { Project } from '../models/project.model';
 @Injectable({
   providedIn: 'root'
 })

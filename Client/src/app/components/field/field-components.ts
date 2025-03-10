@@ -12,7 +12,7 @@ import { Store } from '@ngrx/store';
 import { Field, FieldType } from '../../models/field.model';
 import { EnumValue } from '../../models/enum-value.model';
 import { AppState } from '../../store/app.state';
-import * as EnumValueActions from '../../store/enum-value/enum-value.actions';
+import { deleteEnumValue } from '../../store/enum-value/enum-value.actions';
 
 @Component({
   selector: 'app-field-form',
@@ -310,7 +310,7 @@ export class FieldFormComponent implements OnInit, OnChanges {
     
     // If the enum value has an ID, it exists in the database and should be deleted
     if (enumValue.id) {
-      this.store.dispatch(EnumValueActions.deleteEnumValue({ id: enumValue.id }));
+      this.store.dispatch(deleteEnumValue({ id: enumValue.id }));
     }
     
     this.enumValuesControls.removeAt(index);

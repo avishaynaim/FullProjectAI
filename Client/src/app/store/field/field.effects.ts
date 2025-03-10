@@ -1,86 +1,86 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { of } from 'rxjs';
 import { catchError, map, mergeMap, switchMap } from 'rxjs/operators';
 import { FieldService } from '../../services/field.service';
-import * as FieldActions from './field.actions';
+import { loadFields, loadFieldsSuccess, loadFieldsFailure, loadField, loadFieldSuccess, loadFieldFailure, loadFieldsByMessage, loadFieldsByMessageSuccess, loadFieldsByMessageFailure, loadFieldsByParent, loadFieldsByParentSuccess, loadFieldsByParentFailure, createField, createFieldSuccess, createFieldFailure, updateField, updateFieldSuccess, updateFieldFailure, deleteField, deleteFieldSuccess, deleteFieldFailure, searchFields, searchFieldsSuccess, searchFieldsFailure, exportField, exportFieldSuccess, exportFieldFailure } from './field.actions';
 
 @Injectable()
 export class FieldEffects {
+  constructor(  ) {}
+  private actions$ = inject(Actions);
+  private fieldService = inject(FieldService);
   loadFields$ = createEffect(() => this.actions$?.pipe(
-    ofType(FieldActions.loadFields),
+    ofType(loadFields),
     switchMap(() => this.fieldService.getFields().pipe(
-      map(fields => FieldActions.loadFieldsSuccess({ fields })),
-      catchError(error => of(FieldActions.loadFieldsFailure({ error })))
+      map(fields => loadFieldsSuccess({ fields })),
+      catchError(error => of(loadFieldsFailure({ error })))
     ))
   ));
 
   loadField$ = createEffect(() => this.actions$?.pipe(
-    ofType(FieldActions.loadField),
+    ofType(loadField),
     switchMap(({ id }) => this.fieldService.getField(id).pipe(
-      map(field => FieldActions.loadFieldSuccess({ field })),
-      catchError(error => of(FieldActions.loadFieldFailure({ error })))
+      map(field => loadFieldSuccess({ field })),
+      catchError(error => of(loadFieldFailure({ error })))
     ))
   ));
 
   loadFieldsByMessage$ = createEffect(() => this.actions$?.pipe(
-    ofType(FieldActions.loadFieldsByMessage),
+    ofType(loadFieldsByMessage),
     switchMap(({ messageId }) => this.fieldService.getFieldsByMessage(messageId).pipe(
-      map(fields => FieldActions.loadFieldsByMessageSuccess({ fields })),
-      catchError(error => of(FieldActions.loadFieldsByMessageFailure({ error })))
+      map(fields => loadFieldsByMessageSuccess({ fields })),
+      catchError(error => of(loadFieldsByMessageFailure({ error })))
     ))
   ));
 
   loadFieldsByParent$ = createEffect(() => this.actions$?.pipe(
-    ofType(FieldActions.loadFieldsByParent),
+    ofType(loadFieldsByParent),
     switchMap(({ parentFieldId }) => this.fieldService.getFieldsByParent(parentFieldId).pipe(
-      map(fields => FieldActions.loadFieldsByParentSuccess({ fields })),
-      catchError(error => of(FieldActions.loadFieldsByParentFailure({ error })))
+      map(fields => loadFieldsByParentSuccess({ fields })),
+      catchError(error => of(loadFieldsByParentFailure({ error })))
     ))
   ));
 
   createField$ = createEffect(() => this.actions$?.pipe(
-    ofType(FieldActions.createField),
+    ofType(createField),
     mergeMap(({ field }) => this.fieldService.createField(field).pipe(
-      map(createdField => FieldActions.createFieldSuccess({ field: createdField })),
-      catchError(error => of(FieldActions.createFieldFailure({ error })))
+      map(createdField => createFieldSuccess({ field: createdField })),
+      catchError(error => of(createFieldFailure({ error })))
     ))
   ));
 
   updateField$ = createEffect(() => this.actions$?.pipe(
-    ofType(FieldActions.updateField),
+    ofType(updateField),
     mergeMap(({ field }) => this.fieldService.updateField(field).pipe(
-      map(() => FieldActions.updateFieldSuccess({ field })),
-      catchError(error => of(FieldActions.updateFieldFailure({ error })))
+      map(() => updateFieldSuccess({ field })),
+      catchError(error => of(updateFieldFailure({ error })))
     ))
   ));
 
   deleteField$ = createEffect(() => this.actions$?.pipe(
-    ofType(FieldActions.deleteField),
+    ofType(deleteField),
     mergeMap(({ id }) => this.fieldService.deleteField(id).pipe(
-      map(() => FieldActions.deleteFieldSuccess({ id })),
-      catchError(error => of(FieldActions.deleteFieldFailure({ error })))
+      map(() => deleteFieldSuccess({ id })),
+      catchError(error => of(deleteFieldFailure({ error })))
     ))
   ));
 
   searchFields$ = createEffect(() => this.actions$?.pipe(
-    ofType(FieldActions.searchFields),
+    ofType(searchFields),
     switchMap(({ term }) => this.fieldService.searchFields(term).pipe(
-      map(fields => FieldActions.searchFieldsSuccess({ fields })),
-      catchError(error => of(FieldActions.searchFieldsFailure({ error })))
+      map(fields => searchFieldsSuccess({ fields })),
+      catchError(error => of(searchFieldsFailure({ error })))
     ))
   ));
 
   exportField$ = createEffect(() => this.actions$?.pipe(
-    ofType(FieldActions.exportField),
+    ofType(exportField),
     switchMap(({ id }) => this.fieldService.exportField(id).pipe(
-      map(xml => FieldActions.exportFieldSuccess({ xml })),
-      catchError(error => of(FieldActions.exportFieldFailure({ error })))
+      map(xml => exportFieldSuccess({ xml })),
+      catchError(error => of(exportFieldFailure({ error })))
     ))
   ));
 
-  constructor(
-    private actions$: Actions,
-    private fieldService: FieldService
-  ) {}
+
 }

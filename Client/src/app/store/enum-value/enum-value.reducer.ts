@@ -1,6 +1,6 @@
 import { createReducer, on } from '@ngrx/store';
 import { EnumValue } from '../../models/enum-value.model';
-import * as EnumValueActions from './enum-value.actions';
+import { createEnumValueFailure, createEnumValueSuccess, deleteEnumValueFailure, deleteEnumValueSuccess, enumValueDeletedFromSignalR, enumValueUpdatedFromSignalR, loadEnumValue, loadEnumValueFailure, loadEnumValues, loadEnumValuesByField, loadEnumValuesByFieldFailure, loadEnumValuesByFieldSuccess, loadEnumValuesFailure, loadEnumValuesSuccess, loadEnumValueSuccess, searchEnumValuesFailure, searchEnumValuesSuccess, updateEnumValueFailure, updateEnumValueSuccess } from './enum-value.actions';
 
 export interface EnumValueState {
   enumValues: EnumValue[];
@@ -20,52 +20,52 @@ export const initialState: EnumValueState = {
 
 export const enumValueReducer = createReducer(
   initialState,
-  on(EnumValueActions.loadEnumValues, state => ({
+  on(loadEnumValues, state => ({
     ...state,
     loading: true
   })),
-  on(EnumValueActions.loadEnumValuesSuccess, (state, { enumValues }) => ({
+  on(loadEnumValuesSuccess, (state, { enumValues }) => ({
     ...state,
     enumValues,
     loading: false,
     error: null
   })),
-  on(EnumValueActions.loadEnumValuesFailure, (state, { error }) => ({
+  on(loadEnumValuesFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  on(EnumValueActions.loadEnumValue, state => ({
+  on(loadEnumValue, state => ({
     ...state,
     loading: true
   })),
-  on(EnumValueActions.loadEnumValueSuccess, (state, { enumValue }) => ({
+  on(loadEnumValueSuccess, (state, { enumValue }) => ({
     ...state,
     currentEnumValue: enumValue,
     loading: false,
     error: null
   })),
-  on(EnumValueActions.loadEnumValueFailure, (state, { error }) => ({
+  on(loadEnumValueFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  on(EnumValueActions.loadEnumValuesByField, state => ({
+  on(loadEnumValuesByField, state => ({
     ...state,
     loading: true
   })),
-  on(EnumValueActions.loadEnumValuesByFieldSuccess, (state, { enumValues }) => ({
+  on(loadEnumValuesByFieldSuccess, (state, { enumValues }) => ({
     ...state,
     fieldEnumValues: enumValues,
     loading: false,
     error: null
   })),
-  on(EnumValueActions.loadEnumValuesByFieldFailure, (state, { error }) => ({
+  on(loadEnumValuesByFieldFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  on(EnumValueActions.createEnumValueSuccess, (state, { enumValue }) => ({
+  on(createEnumValueSuccess, (state, { enumValue }) => ({
     ...state,
     enumValues: [...state.enumValues, enumValue],
     fieldEnumValues: enumValue.fieldId === state.fieldEnumValues[0]?.fieldId 
@@ -74,12 +74,12 @@ export const enumValueReducer = createReducer(
     loading: false,
     error: null
   })),
-  on(EnumValueActions.createEnumValueFailure, (state, { error }) => ({
+  on(createEnumValueFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  on(EnumValueActions.updateEnumValueSuccess, (state, { enumValue }) => ({
+  on(updateEnumValueSuccess, (state, { enumValue }) => ({
     ...state,
     enumValues: state.enumValues.map(ev => ev.id === enumValue.id ? enumValue : ev),
     fieldEnumValues: state.fieldEnumValues.map(ev => ev.id === enumValue.id ? enumValue : ev),
@@ -87,12 +87,12 @@ export const enumValueReducer = createReducer(
     loading: false,
     error: null
   })),
-  on(EnumValueActions.updateEnumValueFailure, (state, { error }) => ({
+  on(updateEnumValueFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  on(EnumValueActions.deleteEnumValueSuccess, (state, { id }) => ({
+  on(deleteEnumValueSuccess, (state, { id }) => ({
     ...state,
     enumValues: state.enumValues.filter(ev => ev.id !== id),
     fieldEnumValues: state.fieldEnumValues.filter(ev => ev.id !== id),
@@ -100,23 +100,23 @@ export const enumValueReducer = createReducer(
     loading: false,
     error: null
   })),
-  on(EnumValueActions.deleteEnumValueFailure, (state, { error }) => ({
+  on(deleteEnumValueFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  on(EnumValueActions.searchEnumValuesSuccess, (state, { enumValues }) => ({
+  on(searchEnumValuesSuccess, (state, { enumValues }) => ({
     ...state,
     enumValues,
     loading: false,
     error: null
   })),
-  on(EnumValueActions.searchEnumValuesFailure, (state, { error }) => ({
+  on(searchEnumValuesFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  on(EnumValueActions.enumValueUpdatedFromSignalR, (state, { enumValue }) => ({
+  on(enumValueUpdatedFromSignalR, (state, { enumValue }) => ({
     ...state,
     enumValues: state.enumValues.some(ev => ev.id === enumValue.id) 
       ? state.enumValues.map(ev => ev.id === enumValue.id ? enumValue : ev) 
@@ -128,7 +128,7 @@ export const enumValueReducer = createReducer(
       : state.fieldEnumValues,
     currentEnumValue: state.currentEnumValue?.id === enumValue.id ? enumValue : state.currentEnumValue
   })),
-  on(EnumValueActions.enumValueDeletedFromSignalR, (state, { id }) => ({
+  on(enumValueDeletedFromSignalR, (state, { id }) => ({
     ...state,
     enumValues: state.enumValues.filter(ev => ev.id !== id),
     fieldEnumValues: state.fieldEnumValues.filter(ev => ev.id !== id),

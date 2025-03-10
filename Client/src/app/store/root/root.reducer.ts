@@ -1,6 +1,6 @@
 import { createReducer, on } from '@ngrx/store';
 import { Root } from '../../models/root.model';
-import * as RootActions from './root.actions';
+import { loadRoots, loadRootsSuccess, loadRootsFailure, loadRoot, loadRootSuccess, loadRootFailure, loadRootsByProject, loadRootsByProjectSuccess, loadRootsByProjectFailure, createRootSuccess, createRootFailure, updateRootSuccess, updateRootFailure, deleteRootSuccess, deleteRootFailure, searchRootsSuccess, searchRootsFailure, exportRootSuccess, exportRootFailure, exportAllRootsSuccess, exportAllRootsFailure, rootUpdatedFromSignalR, rootDeletedFromSignalR } from './root.actions';
 
 export interface RootState {
   roots: Root[];
@@ -22,52 +22,52 @@ export const initialState: RootState = {
 
 export const rootReducer = createReducer(
   initialState,
-  on(RootActions.loadRoots, state => ({
+  on(loadRoots, state => ({
     ...state,
     loading: true
   })),
-  on(RootActions.loadRootsSuccess, (state, { roots }) => ({
+  on(loadRootsSuccess, (state, { roots }) => ({
     ...state,
     roots,
     loading: false,
     error: null
   })),
-  on(RootActions.loadRootsFailure, (state, { error }) => ({
+  on(loadRootsFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  on(RootActions.loadRoot, state => ({
+  on(loadRoot, state => ({
     ...state,
     loading: true
   })),
-  on(RootActions.loadRootSuccess, (state, { root }) => ({
+  on(loadRootSuccess, (state, { root }) => ({
     ...state,
     currentRoot: root,
     loading: false,
     error: null
   })),
-  on(RootActions.loadRootFailure, (state, { error }) => ({
+  on(loadRootFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  on(RootActions.loadRootsByProject, state => ({
+  on(loadRootsByProject, state => ({
     ...state,
     loading: true
   })),
-  on(RootActions.loadRootsByProjectSuccess, (state, { roots }) => ({
+  on(loadRootsByProjectSuccess, (state, { roots }) => ({
     ...state,
     projectRoots: roots,
     loading: false,
     error: null
   })),
-  on(RootActions.loadRootsByProjectFailure, (state, { error }) => ({
+  on(loadRootsByProjectFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  on(RootActions.createRootSuccess, (state, { root }) => ({
+  on(createRootSuccess, (state, { root }) => ({
     ...state,
     roots: [...state.roots, root],
     projectRoots: root.projectId === state.projectRoots[0]?.projectId 
@@ -76,12 +76,12 @@ export const rootReducer = createReducer(
     loading: false,
     error: null
   })),
-  on(RootActions.createRootFailure, (state, { error }) => ({
+  on(createRootFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  on(RootActions.updateRootSuccess, (state, { root }) => ({
+  on(updateRootSuccess, (state, { root }) => ({
     ...state,
     roots: state.roots.map(r => r.id === root.id ? root : r),
     projectRoots: state.projectRoots.map(r => r.id === root.id ? root : r),
@@ -89,12 +89,12 @@ export const rootReducer = createReducer(
     loading: false,
     error: null
   })),
-  on(RootActions.updateRootFailure, (state, { error }) => ({
+  on(updateRootFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  on(RootActions.deleteRootSuccess, (state, { id }) => ({
+  on(deleteRootSuccess, (state, { id }) => ({
     ...state,
     roots: state.roots.filter(r => r.id !== id),
     projectRoots: state.projectRoots.filter(r => r.id !== id),
@@ -102,45 +102,45 @@ export const rootReducer = createReducer(
     loading: false,
     error: null
   })),
-  on(RootActions.deleteRootFailure, (state, { error }) => ({
+  on(deleteRootFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  on(RootActions.searchRootsSuccess, (state, { roots }) => ({
+  on(searchRootsSuccess, (state, { roots }) => ({
     ...state,
     roots,
     loading: false,
     error: null
   })),
-  on(RootActions.searchRootsFailure, (state, { error }) => ({
+  on(searchRootsFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  on(RootActions.exportRootSuccess, (state, { xml }) => ({
+  on(exportRootSuccess, (state, { xml }) => ({
     ...state,
     exportedXml: xml,
     loading: false,
     error: null
   })),
-  on(RootActions.exportRootFailure, (state, { error }) => ({
+  on(exportRootFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  on(RootActions.exportAllRootsSuccess, (state, { xml }) => ({
+  on(exportAllRootsSuccess, (state, { xml }) => ({
     ...state,
     exportedXml: xml,
     loading: false,
     error: null
   })),
-  on(RootActions.exportAllRootsFailure, (state, { error }) => ({
+  on(exportAllRootsFailure, (state, { error }) => ({
     ...state,
     loading: false,
     error
   })),
-  on(RootActions.rootUpdatedFromSignalR, (state, { root }) => ({
+  on(rootUpdatedFromSignalR, (state, { root }) => ({
     ...state,
     roots: state.roots.some(r => r.id === root.id) 
       ? state.roots.map(r => r.id === root.id ? root : r) 
@@ -152,7 +152,7 @@ export const rootReducer = createReducer(
       : state.projectRoots,
     currentRoot: state.currentRoot?.id === root.id ? root : state.currentRoot
   })),
-  on(RootActions.rootDeletedFromSignalR, (state, { id }) => ({
+  on(rootDeletedFromSignalR, (state, { id }) => ({
     ...state,
     roots: state.roots.filter(r => r.id !== id),
     projectRoots: state.projectRoots.filter(r => r.id !== id),
