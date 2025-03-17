@@ -47,6 +47,13 @@ function animate(timings, styles = null) {
     timings
   };
 }
+function group(steps, options = null) {
+  return {
+    type: AnimationMetadataType.Group,
+    steps,
+    options
+  };
+}
 function sequence(steps, options = null) {
   return {
     type: AnimationMetadataType.Sequence,
@@ -67,6 +74,12 @@ function state(name, styles, options) {
     name,
     styles,
     options
+  };
+}
+function keyframes(steps) {
+  return {
+    type: AnimationMetadataType.Keyframes,
+    steps
   };
 }
 function transition(stateChangeExpr, steps, options = null) {
@@ -103,6 +116,13 @@ function query(selector, animation2, options = null) {
     selector,
     animation: animation2,
     options
+  };
+}
+function stagger(timings, animation2) {
+  return {
+    type: AnimationMetadataType.Stagger,
+    timings,
+    animation: animation2
   };
 }
 var AnimationBuilder = class _AnimationBuilder {
@@ -496,14 +516,20 @@ export {
   AUTO_STYLE,
   trigger,
   animate,
+  group,
   sequence,
   style,
   state,
+  keyframes,
   transition,
   animation,
   animateChild,
   useAnimation,
   query,
+  stagger,
+  AnimationBuilder,
+  AnimationFactory,
+  BrowserAnimationBuilder,
   NoopAnimationPlayer,
   AnimationGroupPlayer,
   ɵPRE_STYLE
@@ -517,4 +543,4 @@ export {
    * License: MIT
    *)
 */
-//# sourceMappingURL=chunk-JAQ2QP5L.js.map
+//# sourceMappingURL=chunk-XZAENTRC.js.map

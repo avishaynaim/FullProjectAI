@@ -915,7 +915,9 @@ var TooltipModule = class _TooltipModule {
 })();
 
 export {
+  TooltipStyle,
+  TooltipClasses,
   Tooltip,
   TooltipModule
 };
-//# sourceMappingURL=chunk-DI2IGSOK.js.map
+//# sourceMappingURL=chunk-JWTUGZXG.js.map

@@ -234,6 +234,9 @@ var RippleModule = class _RippleModule {
 })();
 
 export {
-  Ripple
+  RippleStyle,
+  RippleClasses,
+  Ripple,
+  RippleModule
 };
-//# sourceMappingURL=chunk-VR4XE2LR.js.map
+//# sourceMappingURL=chunk-WSAGNRL3.js.map

@@ -26,6 +26,7 @@ import { ProjectService } from './services/project.service';
 import { ManualEffectsService } from './services/ManualEffectsService';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import Aura from '@primeng/themes/aura';
+import Lara from '@primeng/themes/lara';
 
 
 

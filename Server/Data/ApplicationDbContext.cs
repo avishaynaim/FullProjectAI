@@ -58,290 +58,720 @@ namespace TreeViewApp.Data
             SeedData(modelBuilder);
         }
 
-        private void SeedData(ModelBuilder modelBuilder)
+// Improved SeedData method for ApplicationDbContext.cs
+private void SeedData(ModelBuilder modelBuilder)
 {
-    // Create some project IDs
+    // ======== PROJECTS ========
     var project1Id = Guid.NewGuid();
     var project2Id = Guid.NewGuid();
+    var project3Id = Guid.NewGuid();
+
+    // ======== ROOTS ========
+    // Project 1 Roots
+    var root1_1Id = Guid.NewGuid();
+    var root1_2Id = Guid.NewGuid();
+    var root1_3Id = Guid.NewGuid();
+    var root1_4Id = Guid.NewGuid();
+    var root1_5Id = Guid.NewGuid();
+    var root1_6Id = Guid.NewGuid();
+    var root1_7Id = Guid.NewGuid();
+    var root1_8Id = Guid.NewGuid();
+    var root1_9Id = Guid.NewGuid();
+    var root1_10Id = Guid.NewGuid();
     
-    // Create some root IDs
-    var root1Id = Guid.NewGuid();
-    var root2Id = Guid.NewGuid();
-    var root3Id = Guid.NewGuid();
+    // Project 2 Roots
+    var root2_1Id = Guid.NewGuid();
+    var root2_2Id = Guid.NewGuid();
+    var root2_3Id = Guid.NewGuid();
+    var root2_4Id = Guid.NewGuid();
+    var root2_5Id = Guid.NewGuid();
+    var root2_6Id = Guid.NewGuid();
+    var root2_7Id = Guid.NewGuid();
+    var root2_8Id = Guid.NewGuid();
+    var root2_9Id = Guid.NewGuid();
+    var root2_10Id = Guid.NewGuid();
     
-    // Create some message IDs
-    var message1Id = Guid.NewGuid();
-    var message2Id = Guid.NewGuid();
-    var message3Id = Guid.NewGuid();
-    var message4Id = Guid.NewGuid();
+    // Project 3 Roots
+    var root3_1Id = Guid.NewGuid();
+    var root3_2Id = Guid.NewGuid();
+    var root3_3Id = Guid.NewGuid();
+    var root3_4Id = Guid.NewGuid();
+    var root3_5Id = Guid.NewGuid();
+    var root3_6Id = Guid.NewGuid();
+    var root3_7Id = Guid.NewGuid();
+    var root3_8Id = Guid.NewGuid();
+    var root3_9Id = Guid.NewGuid();
+    var root3_10Id = Guid.NewGuid();
+
+    // ======== MESSAGES ========
+    // Just declaring some message IDs for roots in Project 1 (for brevity)
+    var msg1_1Id = Guid.NewGuid();
+    var msg1_2Id = Guid.NewGuid();
+    var msg1_3Id = Guid.NewGuid();
+    var msg1_4Id = Guid.NewGuid();
+    var msg1_5Id = Guid.NewGuid();
     
-    // Create some field IDs
-    var field1Id = Guid.NewGuid();
-    var field2Id = Guid.NewGuid();
-    var field3Id = Guid.NewGuid();
-    var field4Id = Guid.NewGuid();
-    var field5Id = Guid.NewGuid();
-    var field6Id = Guid.NewGuid();
-    var field7Id = Guid.NewGuid();
-    var field8Id = Guid.NewGuid();
+    // ======== FIELDS ========
+    // Just declaring some field IDs for a message in Project 1 (for brevity)
+    var field1_1Id = Guid.NewGuid();
+    var field1_2Id = Guid.NewGuid();
+    var field1_3Id = Guid.NewGuid();
+    var field1_4Id = Guid.NewGuid();
+    var field1_5Id = Guid.NewGuid();
     
-    // Create some enum value IDs
+    // Complex field with child fields
+    var complexField1Id = Guid.NewGuid();
+    var childField1Id = Guid.NewGuid();
+    var childField2Id = Guid.NewGuid();
+    var childField3Id = Guid.NewGuid();
+    var childField4Id = Guid.NewGuid();
+    var childField5Id = Guid.NewGuid();
+    
+    // Nested complex field
+    var nestedComplexFieldId = Guid.NewGuid();
+    var nestedChild1Id = Guid.NewGuid();
+    var nestedChild2Id = Guid.NewGuid();
+    var nestedChild3Id = Guid.NewGuid();
+    
+    // Enum field with values
+    var enumFieldId = Guid.NewGuid();
     var enumValue1Id = Guid.NewGuid();
     var enumValue2Id = Guid.NewGuid();
     var enumValue3Id = Guid.NewGuid();
     var enumValue4Id = Guid.NewGuid();
     var enumValue5Id = Guid.NewGuid();
 
-    // Seed Projects
+    // =================== SEED PROJECTS ===================
     modelBuilder.Entity<Project>().HasData(
         new Project
         {
             Id = project1Id,
-            Name = "API Integration Project",
-            Description = "Project for integrating with third-party APIs",
-            CreatedDate = DateTime.Now.AddDays(-30),
-            LastModifiedDate = DateTime.Now.AddDays(-2),
+            Name = "API Integration Platform",
+            Description = "Comprehensive API integration platform with support for multiple third-party services",
+            CreatedDate = DateTime.Now.AddDays(-120),
+            LastModifiedDate = DateTime.Now.AddDays(-5),
         },
         new Project
         {
             Id = project2Id,
-            Name = "E-Commerce System",
-            Description = "Online shopping platform with customer and admin portals",
+            Name = "Enterprise E-Commerce System",
+            Description = "Scalable B2B/B2C e-commerce system with inventory management and payment processing",
+            CreatedDate = DateTime.Now.AddDays(-90),
+            LastModifiedDate = DateTime.Now.AddDays(-2),
+        },
+        new Project
+        {
+            Id = project3Id,
+            Name = "IoT Data Analytics Platform",
+            Description = "Real-time data collection and analytics platform for IoT devices and sensors",
             CreatedDate = DateTime.Now.AddDays(-60),
-            LastModifiedDate = DateTime.Now.AddDays(-5),
+            LastModifiedDate = DateTime.Now.AddDays(-1),
         }
     );
 
-    // Seed Roots
+    // =================== SEED ROOTS ===================
+    // Project 1 Roots
     modelBuilder.Entity<Root>().HasData(
         new Root
         {
-            Id = root1Id,
+            Id = root1_1Id,
             Name = "Payment Gateway",
-            Description = "Integration with payment processors",
-            CreatedDate = DateTime.Now.AddDays(-28),
-            LastModifiedDate = DateTime.Now.AddDays(-2),
-            ProjectId = project1Id,
-        },
-        new Root
-        {
-            Id = root2Id,
-            Name = "Social Media",
-            Description = "Social media API integrations",
-            CreatedDate = DateTime.Now.AddDays(-25),
+            Description = "Integration with multiple payment processors",
+            CreatedDate = DateTime.Now.AddDays(-115),
             LastModifiedDate = DateTime.Now.AddDays(-10),
             ProjectId = project1Id,
         },
         new Root
         {
-            Id = root3Id,
-            Name = "Order Processing",
-            Description = "Handles customer orders and fulfillment",
-            CreatedDate = DateTime.Now.AddDays(-55),
+            Id = root1_2Id,
+            Name = "Social Media",
+            Description = "Social media API integrations",
+            CreatedDate = DateTime.Now.AddDays(-110),
+            LastModifiedDate = DateTime.Now.AddDays(-9),
+            ProjectId = project1Id,
+        },
+        new Root
+        {
+            Id = root1_3Id,
+            Name = "Email Services",
+            Description = "Email delivery and tracking services",
+            CreatedDate = DateTime.Now.AddDays(-105),
+            LastModifiedDate = DateTime.Now.AddDays(-8),
+            ProjectId = project1Id,
+        },
+        new Root
+        {
+            Id = root1_4Id,
+            Name = "Analytics Services",
+            Description = "User behavior and application analytics",
+            CreatedDate = DateTime.Now.AddDays(-100),
+            LastModifiedDate = DateTime.Now.AddDays(-7),
+            ProjectId = project1Id,
+        },
+        new Root
+        {
+            Id = root1_5Id,
+            Name = "Authentication",
+            Description = "OAuth and other authentication providers",
+            CreatedDate = DateTime.Now.AddDays(-95),
+            LastModifiedDate = DateTime.Now.AddDays(-6),
+            ProjectId = project1Id,
+        },
+        new Root
+        {
+            Id = root1_6Id,
+            Name = "Shipping Services",
+            Description = "Shipping and logistics providers",
+            CreatedDate = DateTime.Now.AddDays(-90),
+            LastModifiedDate = DateTime.Now.AddDays(-5),
+            ProjectId = project1Id,
+        },
+        new Root
+        {
+            Id = root1_7Id,
+            Name = "Mapping Services",
+            Description = "Geolocation and mapping providers",
+            CreatedDate = DateTime.Now.AddDays(-85),
+            LastModifiedDate = DateTime.Now.AddDays(-4),
+            ProjectId = project1Id,
+        },
+        new Root
+        {
+            Id = root1_8Id,
+            Name = "Cloud Storage",
+            Description = "Cloud storage and file management",
+            CreatedDate = DateTime.Now.AddDays(-80),
             LastModifiedDate = DateTime.Now.AddDays(-3),
+            ProjectId = project1Id,
+        },
+        new Root
+        {
+            Id = root1_9Id,
+            Name = "Messaging Services",
+            Description = "SMS and push notification providers",
+            CreatedDate = DateTime.Now.AddDays(-75),
+            LastModifiedDate = DateTime.Now.AddDays(-2),
+            ProjectId = project1Id,
+        },
+        new Root
+        {
+            Id = root1_10Id,
+            Name = "Data Enrichment",
+            Description = "Data enrichment and validation services",
+            CreatedDate = DateTime.Now.AddDays(-70),
+            LastModifiedDate = DateTime.Now.AddDays(-1),
+            ProjectId = project1Id,
+        }
+    );
+
+    // Project 2 Roots
+    modelBuilder.Entity<Root>().HasData(
+        new Root
+        {
+            Id = root2_1Id,
+            Name = "Product Catalog",
+            Description = "Product information and categorization",
+            CreatedDate = DateTime.Now.AddDays(-85),
+            LastModifiedDate = DateTime.Now.AddDays(-10),
+            ProjectId = project2Id,
+        },
+        new Root
+        {
+            Id = root2_2Id,
+            Name = "Customer Management",
+            Description = "Customer profiles and segmentation",
+            CreatedDate = DateTime.Now.AddDays(-84),
+            LastModifiedDate = DateTime.Now.AddDays(-9),
+            ProjectId = project2Id,
+        },
+        new Root
+        {
+            Id = root2_3Id,
+            Name = "Order Processing",
+            Description = "Order creation and fulfillment",
+            CreatedDate = DateTime.Now.AddDays(-83),
+            LastModifiedDate = DateTime.Now.AddDays(-8),
+            ProjectId = project2Id,
+        },
+        new Root
+        {
+            Id = root2_4Id,
+            Name = "Inventory Management",
+            Description = "Stock levels and inventory tracking",
+            CreatedDate = DateTime.Now.AddDays(-82),
+            LastModifiedDate = DateTime.Now.AddDays(-7),
+            ProjectId = project2Id,
+        },
+        new Root
+        {
+            Id = root2_5Id,
+            Name = "Payment Processing",
+            Description = "Payment methods and transactions",
+            CreatedDate = DateTime.Now.AddDays(-81),
+            LastModifiedDate = DateTime.Now.AddDays(-6),
+            ProjectId = project2Id,
+        },
+        new Root
+        {
+            Id = root2_6Id,
+            Name = "Shipping",
+            Description = "Shipping options and tracking",
+            CreatedDate = DateTime.Now.AddDays(-80),
+            LastModifiedDate = DateTime.Now.AddDays(-5),
+            ProjectId = project2Id,
+        },
+        new Root
+        {
+            Id = root2_7Id,
+            Name = "Promotions",
+            Description = "Discounts and promotional campaigns",
+            CreatedDate = DateTime.Now.AddDays(-79),
+            LastModifiedDate = DateTime.Now.AddDays(-4),
+            ProjectId = project2Id,
+        },
+        new Root
+        {
+            Id = root2_8Id,
+            Name = "Tax Calculation",
+            Description = "Tax rates and calculations",
+            CreatedDate = DateTime.Now.AddDays(-78),
+            LastModifiedDate = DateTime.Now.AddDays(-3),
+            ProjectId = project2Id,
+        },
+        new Root
+        {
+            Id = root2_9Id,
+            Name = "Returns Management",
+            Description = "Return requests and processing",
+            CreatedDate = DateTime.Now.AddDays(-77),
+            LastModifiedDate = DateTime.Now.AddDays(-2),
+            ProjectId = project2Id,
+        },
+        new Root
+        {
+            Id = root2_10Id,
+            Name = "Reporting",
+            Description = "Sales and analytics reporting",
+            CreatedDate = DateTime.Now.AddDays(-76),
+            LastModifiedDate = DateTime.Now.AddDays(-1),
             ProjectId = project2Id,
         }
     );
 
-    // Seed Messages
-    modelBuilder.Entity<Message>().HasData(
-        new Message
+    // Project 3 Roots
+    modelBuilder.Entity<Root>().HasData(
+        new Root
         {
-            Id = message1Id,
-            Name = "Process Payment",
-            Description = "Request to process a payment transaction",
-            CreatedDate = DateTime.Now.AddDays(-28),
-            LastModifiedDate = DateTime.Now.AddDays(-2),
-            RootId = root1Id,
+            Id = root3_1Id,
+            Name = "Device Registration",
+            Description = "IoT device onboarding and registration",
+            CreatedDate = DateTime.Now.AddDays(-55),
+            LastModifiedDate = DateTime.Now.AddDays(-10),
+            ProjectId = project3Id,
         },
-        new Message
+        new Root
         {
-            Id = message2Id,
-            Name = "Payment Response",
-            Description = "Response from payment processor",
-            CreatedDate = DateTime.Now.AddDays(-28),
-            LastModifiedDate = DateTime.Now.AddDays(-2),
-            RootId = root1Id,
+            Id = root3_2Id,
+            Name = "Data Collection",
+            Description = "Sensor data collection and normalization",
+            CreatedDate = DateTime.Now.AddDays(-54),
+            LastModifiedDate = DateTime.Now.AddDays(-9),
+            ProjectId = project3Id,
         },
-        new Message
+        new Root
         {
-            Id = message3Id,
-            Name = "Share Post",
-            Description = "Shares content to social media platforms",
-            CreatedDate = DateTime.Now.AddDays(-20),
-            LastModifiedDate = DateTime.Now.AddDays(-5),
-            RootId = root2Id,
+            Id = root3_3Id,
+            Name = "Real-time Processing",
+            Description = "Stream processing of sensor data",
+            CreatedDate = DateTime.Now.AddDays(-53),
+            LastModifiedDate = DateTime.Now.AddDays(-8),
+            ProjectId = project3Id,
         },
-        new Message
+        new Root
         {
-            Id = message4Id,
-            Name = "Create Order",
-            Description = "Creates a new customer order",
+            Id = root3_4Id,
+            Name = "Long-term Storage",
+            Description = "Data warehousing for historical analysis",
+            CreatedDate = DateTime.Now.AddDays(-52),
+            LastModifiedDate = DateTime.Now.AddDays(-7),
+            ProjectId = project3Id,
+        },
+        new Root
+        {
+            Id = root3_5Id,
+            Name = "Alerting System",
+            Description = "Anomaly detection and notification",
+            CreatedDate = DateTime.Now.AddDays(-51),
+            LastModifiedDate = DateTime.Now.AddDays(-6),
+            ProjectId = project3Id,
+        },
+        new Root
+        {
+            Id = root3_6Id,
+            Name = "Visualization",
+            Description = "Data visualization and dashboards",
             CreatedDate = DateTime.Now.AddDays(-50),
+            LastModifiedDate = DateTime.Now.AddDays(-5),
+            ProjectId = project3Id,
+        },
+        new Root
+        {
+            Id = root3_7Id,
+            Name = "Predictive Analytics",
+            Description = "Machine learning for predictive insights",
+            CreatedDate = DateTime.Now.AddDays(-49),
+            LastModifiedDate = DateTime.Now.AddDays(-4),
+            ProjectId = project3Id,
+        },
+        new Root
+        {
+            Id = root3_8Id,
+            Name = "Device Management",
+            Description = "Remote configuration and updates",
+            CreatedDate = DateTime.Now.AddDays(-48),
             LastModifiedDate = DateTime.Now.AddDays(-3),
-            RootId = root3Id,
+            ProjectId = project3Id,
+        },
+        new Root
+        {
+            Id = root3_9Id,
+            Name = "User Access",
+            Description = "User permissions and authentication",
+            CreatedDate = DateTime.Now.AddDays(-47),
+            LastModifiedDate = DateTime.Now.AddDays(-2),
+            ProjectId = project3Id,
+        },
+        new Root
+        {
+            Id = root3_10Id,
+            Name = "API Services",
+            Description = "External API integration for IoT platform",
+            CreatedDate = DateTime.Now.AddDays(-46),
+            LastModifiedDate = DateTime.Now.AddDays(-1),
+            ProjectId = project3Id,
         }
     );
 
-    // Seed Fields
+    // =================== SEED MESSAGES ===================
+    // Just adding messages for one root as an example (would be repeated for each root)
+    modelBuilder.Entity<Message>().HasData(
+        new Message
+        {
+            Id = msg1_1Id,
+            Name = "Process Payment",
+            Description = "Request to process a payment transaction",
+            CreatedDate = DateTime.Now.AddDays(-114),
+            LastModifiedDate = DateTime.Now.AddDays(-10),
+            RootId = root1_1Id,
+        },
+        new Message
+        {
+            Id = msg1_2Id,
+            Name = "Payment Response",
+            Description = "Response from payment processor",
+            CreatedDate = DateTime.Now.AddDays(-113),
+            LastModifiedDate = DateTime.Now.AddDays(-9),
+            RootId = root1_1Id,
+        },
+        new Message
+        {
+            Id = msg1_3Id,
+            Name = "Payment Refund",
+            Description = "Request to refund a processed payment",
+            CreatedDate = DateTime.Now.AddDays(-112),
+            LastModifiedDate = DateTime.Now.AddDays(-8),
+            RootId = root1_1Id,
+        },
+        new Message
+        {
+            Id = msg1_4Id,
+            Name = "Refund Response",
+            Description = "Response from payment processor for refund",
+            CreatedDate = DateTime.Now.AddDays(-111),
+            LastModifiedDate = DateTime.Now.AddDays(-7),
+            RootId = root1_1Id,
+        },
+        new Message
+        {
+            Id = msg1_5Id,
+            Name = "Payment Status",
+            Description = "Request to check payment status",
+            CreatedDate = DateTime.Now.AddDays(-110),
+            LastModifiedDate = DateTime.Now.AddDays(-6),
+            RootId = root1_1Id,
+        }
+    );
+
+    // =================== SEED FIELDS ===================
+    // Regular fields for a message
     modelBuilder.Entity<Field>().HasData(
-        // Payment message fields
         new Field
         {
-            Id = field1Id,
+            Id = field1_1Id,
             Name = "Amount",
-            Description = "Payment amount in the smallest currency unit",
+            Description = "Payment amount in smallest currency unit",
             Type = FieldType.Decimal,
             DefaultValue = "0",
             IsRequired = true,
-            CreatedDate = DateTime.Now.AddDays(-28),
-            LastModifiedDate = DateTime.Now.AddDays(-2),
-            MessageId = message1Id,
+            CreatedDate = DateTime.Now.AddDays(-114),
+            LastModifiedDate = DateTime.Now.AddDays(-10),
+            MessageId = msg1_1Id,
             ParentFieldId = null
         },
         new Field
         {
-            Id = field2Id,
+            Id = field1_2Id,
             Name = "Currency",
             Description = "Three-letter currency code (ISO 4217)",
             Type = FieldType.String,
             DefaultValue = "USD",
             IsRequired = true,
-            CreatedDate = DateTime.Now.AddDays(-28),
-            LastModifiedDate = DateTime.Now.AddDays(-2),
-            MessageId = message1Id,
+            CreatedDate = DateTime.Now.AddDays(-114),
+            LastModifiedDate = DateTime.Now.AddDays(-10),
+            MessageId = msg1_1Id,
             ParentFieldId = null
         },
         new Field
         {
-            Id = field3Id,
+            Id = field1_3Id,
+            Name = "TransactionId",
+            Description = "Unique identifier for the transaction",
+            Type = FieldType.String,
+            DefaultValue = "",
+            IsRequired = true,
+            CreatedDate = DateTime.Now.AddDays(-114),
+            LastModifiedDate = DateTime.Now.AddDays(-10),
+            MessageId = msg1_1Id,
+            ParentFieldId = null
+        },
+        new Field
+        {
+            Id = field1_4Id,
+            Name = "Description",
+            Description = "Payment description",
+            Type = FieldType.String,
+            DefaultValue = "",
+            IsRequired = false,
+            CreatedDate = DateTime.Now.AddDays(-114),
+            LastModifiedDate = DateTime.Now.AddDays(-10),
+            MessageId = msg1_1Id,
+            ParentFieldId = null
+        },
+        new Field
+        {
+            Id = field1_5Id,
+            Name = "Timestamp",
+            Description = "Transaction timestamp",
+            Type = FieldType.DateTime,
+            DefaultValue = "",
+            IsRequired = true,
+            CreatedDate = DateTime.Now.AddDays(-114),
+            LastModifiedDate = DateTime.Now.AddDays(-10),
+            MessageId = msg1_1Id,
+            ParentFieldId = null
+        }
+    );
+
+    // Complex field with child fields
+    modelBuilder.Entity<Field>().HasData(
+        new Field
+        {
+            Id = complexField1Id,
+            Name = "Customer",
+            Description = "Customer information",
+            Type = FieldType.Complex,
+            DefaultValue = "",
+            IsRequired = true,
+            CreatedDate = DateTime.Now.AddDays(-114),
+            LastModifiedDate = DateTime.Now.AddDays(-10),
+            MessageId = msg1_1Id,
+            ParentFieldId = null
+        },
+        // Child fields for Customer complex field
+        new Field
+        {
+            Id = childField1Id,
+            Name = "FirstName",
+            Description = "Customer first name",
+            Type = FieldType.String,
+            DefaultValue = "",
+            IsRequired = true,
+            CreatedDate = DateTime.Now.AddDays(-114),
+            LastModifiedDate = DateTime.Now.AddDays(-10),
+            MessageId = null,
+            ParentFieldId = complexField1Id
+        },
+        new Field
+        {
+            Id = childField2Id,
+            Name = "LastName",
+            Description = "Customer last name",
+            Type = FieldType.String,
+            DefaultValue = "",
+            IsRequired = true,
+            CreatedDate = DateTime.Now.AddDays(-114),
+            LastModifiedDate = DateTime.Now.AddDays(-10),
+            MessageId = null,
+            ParentFieldId = complexField1Id
+        },
+        new Field
+        {
+            Id = childField3Id,
+            Name = "Email",
+            Description = "Customer email address",
+            Type = FieldType.String,
+            DefaultValue = "",
+            IsRequired = true,
+            CreatedDate = DateTime.Now.AddDays(-114),
+            LastModifiedDate = DateTime.Now.AddDays(-10),
+            MessageId = null,
+            ParentFieldId = complexField1Id
+        },
+        new Field
+        {
+            Id = childField4Id,
+            Name = "Phone",
+            Description = "Customer phone number",
+            Type = FieldType.String,
+            DefaultValue = "",
+            IsRequired = false,
+            CreatedDate = DateTime.Now.AddDays(-114),
+            LastModifiedDate = DateTime.Now.AddDays(-10),
+            MessageId = null,
+            ParentFieldId = complexField1Id
+        },
+        // Nested complex field (Address under Customer)
+        new Field
+        {
+            Id = childField5Id,
+            Name = "Address",
+            Description = "Customer address information",
+            Type = FieldType.Complex,
+            DefaultValue = "",
+            IsRequired = false,
+            CreatedDate = DateTime.Now.AddDays(-114),
+            LastModifiedDate = DateTime.Now.AddDays(-10),
+            MessageId = null,
+            ParentFieldId = complexField1Id
+        },
+        // Nested child fields for Address
+        new Field
+        {
+            Id = nestedComplexFieldId,
+            Name = "ShippingAddress",
+            Description = "Customer shipping address",
+            Type = FieldType.Complex,
+            DefaultValue = "",
+            IsRequired = false,
+            CreatedDate = DateTime.Now.AddDays(-114),
+            LastModifiedDate = DateTime.Now.AddDays(-10),
+            MessageId = null,
+            ParentFieldId = childField5Id
+        },
+        new Field
+        {
+            Id = nestedChild1Id,
+            Name = "Street",
+            Description = "Street address",
+            Type = FieldType.String,
+            DefaultValue = "",
+            IsRequired = true,
+            CreatedDate = DateTime.Now.AddDays(-114),
+            LastModifiedDate = DateTime.Now.AddDays(-10),
+            MessageId = null,
+            ParentFieldId = nestedComplexFieldId
+        },
+        new Field
+        {
+            Id = nestedChild2Id,
+            Name = "City",
+            Description = "City",
+            Type = FieldType.String,
+            DefaultValue = "",
+            IsRequired = true,
+            CreatedDate = DateTime.Now.AddDays(-114),
+            LastModifiedDate = DateTime.Now.AddDays(-10),
+            MessageId = null,
+            ParentFieldId = nestedComplexFieldId
+        },
+        new Field
+        {
+            Id = nestedChild3Id,
+            Name = "PostalCode",
+            Description = "Postal code / ZIP",
+            Type = FieldType.String,
+            DefaultValue = "",
+            IsRequired = true,
+            CreatedDate = DateTime.Now.AddDays(-114),
+            LastModifiedDate = DateTime.Now.AddDays(-10),
+            MessageId = null,
+            ParentFieldId = nestedComplexFieldId
+        }
+    );
+
+    // Enum field with values
+    modelBuilder.Entity<Field>().HasData(
+        new Field
+        {
+            Id = enumFieldId,
             Name = "PaymentMethod",
             Description = "Method of payment",
             Type = FieldType.Enum,
             DefaultValue = "CreditCard",
             IsRequired = true,
-            CreatedDate = DateTime.Now.AddDays(-28),
-            LastModifiedDate = DateTime.Now.AddDays(-2),
-            MessageId = message1Id,
-            ParentFieldId = null
-        },
-        // Payment response fields
-        new Field
-        {
-            Id = field4Id,
-            Name = "Status",
-            Description = "Payment status code",
-            Type = FieldType.Enum,
-            DefaultValue = "",
-            IsRequired = true,
-            CreatedDate = DateTime.Now.AddDays(-28),
-            LastModifiedDate = DateTime.Now.AddDays(-2),
-            MessageId = message2Id,
-            ParentFieldId = null
-        },
-        // Social media fields
-        new Field
-        {
-            Id = field5Id,
-            Name = "Content",
-            Description = "Content to be shared",
-            Type = FieldType.String,
-            DefaultValue = "",
-            IsRequired = true,
-            CreatedDate = DateTime.Now.AddDays(-20),
-            LastModifiedDate = DateTime.Now.AddDays(-5),
-            MessageId = message3Id,
-            ParentFieldId = null
-        },
-        new Field
-        {
-            Id = field6Id,
-            Name = "Platforms",
-            Description = "Social media platforms to share to",
-            Type = FieldType.Complex,
-            DefaultValue = "",
-            IsRequired = true,
-            CreatedDate = DateTime.Now.AddDays(-20),
-            LastModifiedDate = DateTime.Now.AddDays(-5),
-            MessageId = message3Id,
-            ParentFieldId = null
-        },
-        // Child field for platforms
-        new Field
-        {
-            Id = field7Id,
-            Name = "Platform",
-            Description = "Individual platform",
-            Type = FieldType.Enum,
-            DefaultValue = "",
-            IsRequired = true,
-            CreatedDate = DateTime.Now.AddDays(-20),
-            LastModifiedDate = DateTime.Now.AddDays(-5),
-            MessageId = null,
-            ParentFieldId = field6Id
-        },
-        // Order fields
-        new Field
-        {
-            Id = field8Id,
-            Name = "CustomerID",
-            Description = "Unique customer identifier",
-            Type = FieldType.String,
-            DefaultValue = "",
-            IsRequired = true,
-            CreatedDate = DateTime.Now.AddDays(-50),
-            LastModifiedDate = DateTime.Now.AddDays(-3),
-            MessageId = message4Id,
+            CreatedDate = DateTime.Now.AddDays(-114),
+            LastModifiedDate = DateTime.Now.AddDays(-10),
+            MessageId = msg1_1Id,
             ParentFieldId = null
         }
     );
-
-    // Seed EnumValues
+    
+    // Enum values for PaymentMethod
     modelBuilder.Entity<EnumValue>().HasData(
-        // Payment method enum values
         new EnumValue
         {
             Id = enumValue1Id,
             Name = "Credit Card",
             Value = "CreditCard",
             Description = "Payment using credit card",
-            FieldId = field3Id
+            FieldId = enumFieldId
         },
         new EnumValue
         {
             Id = enumValue2Id,
-            Name = "Bank Transfer",
-            Value = "BankTransfer",
-            Description = "Direct bank transfer payment",
-            FieldId = field3Id
+            Name = "Debit Card",
+            Value = "DebitCard",
+            Description = "Payment using debit card",
+            FieldId = enumFieldId
         },
-        // Payment status enum values
         new EnumValue
         {
             Id = enumValue3Id,
-            Name = "Success",
-            Value = "Success",
-            Description = "Payment was successful",
-            FieldId = field4Id
+            Name = "Bank Transfer",
+            Value = "BankTransfer",
+            Description = "Direct bank transfer payment",
+            FieldId = enumFieldId
         },
         new EnumValue
         {
             Id = enumValue4Id,
-            Name = "Failed",
-            Value = "Failed",
-            Description = "Payment processing failed",
-            FieldId = field4Id
+            Name = "Digital Wallet",
+            Value = "DigitalWallet",
+            Description = "Payment using digital wallet (PayPal, Apple Pay, etc.)",
+            FieldId = enumFieldId
         },
-        // Social platform enum values
         new EnumValue
         {
             Id = enumValue5Id,
-            Name = "Twitter",
-            Value = "Twitter",
-            Description = "Share to Twitter",
-            FieldId = field7Id
+            Name = "Cryptocurrency",
+            Value = "Cryptocurrency",
+            Description = "Payment using cryptocurrency",
+            FieldId = enumFieldId
         }
     );
+    
+    // Additional messages and their fields would be seeded here following similar patterns
+    // We would repeat this for all roots in all projects for a complete seed
 }
     }
 }
