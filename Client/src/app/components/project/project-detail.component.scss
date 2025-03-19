@@ -1,0 +1,485 @@
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Main container */
+.project-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #121212;
+  color: #e0e0e0;
+  padding: 20px;
+}
+
+/* Breadcrumb navigation */
+.breadcrumb-container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.breadcrumb-item {
+  display: flex;
+  align-items: center;
+}
+
+.breadcrumb-link {
+  color: #a0a0a0;
+  text-decoration: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: color 0.2s ease, background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.breadcrumb-link:hover {
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.breadcrumb-link.active {
+  color: #4caf50;
+  font-weight: 500;
+}
+
+.breadcrumb-separator {
+  margin: 0 4px;
+  color: #666666;
+}
+
+/* Project header */
+.project-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+  background-color: #1e1e1e;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.header-left {
+  flex: 1;
+  min-width: 250px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.project-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+/* Search box */
+.search-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-input {
+  background-color: #2c2c2c;
+  color: #ffffff;
+  border: 1px solid #444444;
+  border-radius: 4px;
+  padding: 8px 12px 8px 35px;
+  min-width: 250px;
+  transition: all 0.3s ease;
+}
+
+.search-input:focus {
+  border-color: #4caf50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+
+.clear-search-btn {
+  position: absolute;
+  right: 8px;
+  color: #a0a0a0;
+}
+
+.p-input-icon-left i {
+  color: #a0a0a0;
+  left: 12px;
+}
+
+/* Action buttons */
+.action-button {
+  padding: 8px 16px;
+  transition: all 0.2s ease;
+}
+
+.action-button:hover:enabled {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Tab navigation */
+.tab-container {
+  margin-bottom: 16px;
+}
+
+.tab-nav {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-bottom: 1px solid #444444;
+}
+
+.tab-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #a0a0a0;
+  border-bottom: 2px solid transparent;
+  position: relative;
+}
+
+.tab-item:hover {
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.tab-item.active {
+  color: #4caf50;
+  border-bottom-color: #4caf50;
+}
+
+.tab-item.active::before {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #4caf50;
+  animation: tab-indicator 0.3s ease-out;
+}
+
+@keyframes tab-indicator {
+  0% { transform: scaleX(0); }
+  100% { transform: scaleX(1); }
+}
+
+/* Tree View */
+.tree-view-container {
+  margin-top: 20px;
+}
+
+.tree-layout {
+  display: flex;
+  gap: 20px;
+  height: calc(100vh - 250px);
+}
+
+.tree-sidebar {
+  flex: 0 0 300px;
+  background-color: #1e1e1e;
+  border-radius: 8px;
+  padding: 16px;
+  overflow: auto;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.tree-details {
+  flex: 1;
+  background-color: #1e1e1e;
+  border-radius: 8px;
+  overflow: auto;
+  padding: 0;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+/* Custom Tree Styling */
+:host ::ng-deep .custom-tree {
+  border: none;
+  background-color: transparent;
+  color: #e0e0e0;
+}
+
+:host ::ng-deep .custom-tree .p-treenode {
+  padding: 4px 0;
+}
+
+:host ::ng-deep .custom-tree .p-treenode-content {
+  padding: 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+:host ::ng-deep .custom-tree .p-treenode-content:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+:host ::ng-deep .custom-tree .p-treenode-content.p-highlight {
+  background-color: rgba(76, 175, 80, 0.2);
+  color: #4caf50;
+}
+
+:host ::ng-deep .custom-tree .p-tree-toggler {
+  margin-right: 8px;
+}
+
+:host ::ng-deep .custom-tree .p-treenode-icon {
+  margin-right: 8px;
+  color: #a0a0a0;
+}
+
+/* Details card */
+.details-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.details-header {
+  padding: 20px;
+  border-bottom: 1px solid #444444;
+  background-color: #252525;
+}
+
+.details-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.details-content {
+  padding: 20px;
+  flex: 1;
+  overflow: auto;
+}
+
+.details-property {
+  display: flex;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.property-label {
+  width: 150px;
+  font-weight: 500;
+  color: #a0a0a0;
+}
+
+.property-value {
+  flex: 1;
+  color: #ffffff;
+  min-width: 200px;
+}
+
+.details-actions {
+  display: flex;
+  gap: 10px;
+  padding: 16px 20px;
+  background-color: #252525;
+  border-top: 1px solid #444444;
+  flex-wrap: wrap;
+}
+
+.action-btn {
+  flex: 1;
+  min-width: 120px;
+  padding: 8px 12px;
+}
+
+/* No selection state */
+.no-selection {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.selection-hint {
+  text-align: center;
+  color: #888888;
+}
+
+.hint-icon {
+  font-size: 40px;
+  margin-bottom: 16px;
+  color: #4caf50;
+  animation: pulse 2s infinite;
+}
+
+.hint-text {
+  font-size: 16px;
+  margin: 0;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.1); }
+  100% { opacity: 0.6; transform: scale(1); }
+}
+
+/* Roots List Table */
+.roots-list-container {
+  margin-top: 20px;
+}
+
+:host ::ng-deep .custom-table {
+  background-color: #1e1e1e;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+:host ::ng-deep .custom-table .p-datatable-thead > tr > th {
+  background-color: #252525;
+  color: #ffffff;
+  border-color: #444444;
+  padding: 12px 16px;
+  font-weight: 600;
+}
+
+:host ::ng-deep .custom-table .p-datatable-tbody > tr {
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+  transition: background-color 0.2s ease;
+}
+
+:host ::ng-deep .custom-table .p-datatable-tbody > tr > td {
+  border-color: #333333;
+  padding: 12px 16px;
+}
+
+:host ::ng-deep .custom-table .p-datatable-tbody > tr:hover {
+  background-color: #252525;
+}
+
+:host ::ng-deep .p-paginator {
+  background-color: #252525;
+  color: #e0e0e0;
+  border-color: #444444;
+  padding: 8px;
+}
+
+:host ::ng-deep .p-paginator .p-paginator-element {
+  color: #e0e0e0;
+}
+
+:host ::ng-deep .p-paginator .p-paginator-page.p-highlight {
+  background-color: #4caf50;
+  color: #ffffff;
+}
+
+.table-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-start;
+}
+
+/* Empty message */
+.empty-message {
+  text-align: center;
+  padding: 40px !important;
+  color: #888888;
+}
+
+.empty-icon {
+  font-size: 32px;
+  margin-bottom: 16px;
+  color: #666666;
+}
+
+/* Dialog Styling */
+:host ::ng-deep .custom-dialog .p-dialog-header {
+  background-color: #252525;
+  color: #ffffff;
+  padding: 16px 20px;
+  border-bottom: 1px solid #444444;
+}
+
+:host ::ng-deep .custom-dialog .p-dialog-content {
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+}
+
+:host ::ng-deep .custom-dialog .p-dialog-footer {
+  background-color: #252525;
+  border-top: 1px solid #444444;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.field-label {
+  font-weight: 500;
+  color: #e0e0e0;
+}
+
+.field-input {
+  background-color: #252525;
+  color: #ffffff;
+  border: 1px solid #444444;
+  border-radius: 4px;
+  padding: 10px 12px;
+  transition: all 0.2s ease;
+}
+
+.field-input:focus {
+  border-color: #4caf50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* Export Dialog */
+.export-content {
+  background-color: #252525;
+  overflow: auto;
+  max-height: 60vh;
+  border-radius: 4px;
+  padding: 12px;
+}
+
+.export-code {
+  margin: 0;
+  white-space: pre-wrap;
+  font-family: 'Consolas', 'Monaco', monospace;
+  color: #e0e0e0;
+  font-size: 14px;
+  line-height: 1.5;
+}

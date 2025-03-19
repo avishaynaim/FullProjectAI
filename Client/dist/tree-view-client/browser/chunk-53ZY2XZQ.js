@@ -1,1 +1,0 @@
-import{ue as t,ve as o}from"./chunk-R5Z5HX2T.js";var r=o("projects"),l=t(r,e=>e.projects),j=t(r,e=>e.dummy),p=t(r,e=>e.currentProject),P=t(r,e=>e.loading),a=t(r,e=>e.error),m=e=>t(l,c=>c.find(s=>s.id===e)||null);export{l as a,j as b,P as c,m as d};

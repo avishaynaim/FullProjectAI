@@ -1,0 +1,374 @@
+<div class="project-container" @fadeIn>
+  <!-- Breadcrumb navigation -->
+  <div class="breadcrumb-container">
+    <ng-container *ngFor="let crumb of breadcrumbs; let last = last; let i = index">
+      <div class="breadcrumb-item">
+        <a 
+          [routerLink]="crumb.routerLink" 
+          class="breadcrumb-link"
+          [class.active]="last"
+        >
+          <i *ngIf="i === 0" class="pi pi-home"></i>
+          <span>{{ crumb.label }}</span>
+        </a>
+        <i *ngIf="!last" class="pi pi-angle-right breadcrumb-separator"></i>
+      </div>
+    </ng-container>
+  </div>
+
+  <!-- Main header with search and actions -->
+  <div class="project-header" @slideIn>
+    <div class="header-left">
+      <h1 class="project-title">{{ project?.name || 'Project Details' }}</h1>
+    </div>
+    <div class="header-right">
+      <div class="search-container">
+        <span class="p-input-icon-left">
+          <i class="pi pi-search"></i>
+          <input 
+            type="text" 
+            pInputText 
+            [(ngModel)]="searchTerm" 
+            (input)="onSearch($event)" 
+            placeholder="Search by name, description, etc."
+            class="search-input"
+          />
+        </span>
+        <button 
+          *ngIf="searchTerm" 
+          pButton 
+          pRipple 
+          type="button" 
+          icon="pi pi-times" 
+          class="p-button-rounded p-button-text clear-search-btn" 
+          (click)="onClearSearch()"
+          pTooltip="Clear search"
+        ></button>
+      </div>
+      <button 
+        pButton 
+        pRipple 
+        type="button" 
+        label="New Root" 
+        icon="pi pi-plus" 
+        class="p-button-success action-button" 
+        (click)="showCreateRootDialog()"
+        pTooltip="Create new root"
+      ></button>
+      <button 
+        pButton 
+        pRipple 
+        type="button" 
+        label="Export All" 
+        icon="pi pi-download" 
+        class="p-button-primary action-button" 
+        (click)="exportAllRoots()"
+        [disabled]="!roots.length"
+        pTooltip="Export all roots"
+      ></button>
+    </div>
+  </div>
+  
+  <!-- Tab navigation -->
+  <div class="tab-container" @slideIn>
+    <ul class="tab-nav">
+      <li 
+        class="tab-item" 
+        [class.active]="activeTab === 'tree'" 
+        (click)="setActiveTab('tree')"
+      >
+        <i class="pi pi-sitemap"></i>
+        <span>Tree View</span>
+      </li>
+      <li 
+        class="tab-item" 
+        [class.active]="activeTab === 'list'" 
+        (click)="setActiveTab('list')"
+      >
+        <i class="pi pi-list"></i>
+        <span>Roots List</span>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Tab content -->
+  <div class="tab-content" @staggerIn>
+    <!-- Tree View -->
+    <div *ngIf="activeTab === 'tree'" class="tree-view-container">
+      <div class="tree-layout">
+        <div class="tree-sidebar stagger-item">
+          <p-tree 
+            [value]="treeNodes" 
+            selectionMode="single" 
+            [(selection)]="selectedNode"
+            (onNodeSelect)="onNodeSelect($event)"
+            [filter]="true"
+            [filterMode]="'lenient'"
+            filterPlaceholder="Search tree..."
+            styleClass="custom-tree"
+          >
+            <ng-template pTemplate="header">
+              <div class="p-tree-header">
+                <strong>Project Structure</strong>
+              </div>
+            </ng-template>
+          </p-tree>
+        </div>
+        
+        <div class="tree-details stagger-item">
+          <ng-container *ngIf="selectedNode">
+            <div class="details-card">
+              <div class="details-header">
+                <h2 class="details-title">{{ getSelectedNodeHeader() }}</h2>
+              </div>
+              
+              <div class="details-content" *ngIf="selectedNodeDetails">
+                <div class="details-property" *ngFor="let prop of getVisibleProperties()">
+                  <div class="property-label">{{ prop.label }}:</div>
+                  <div class="property-value">
+                    <ng-container [ngSwitch]="prop.type">
+                      <span *ngSwitchCase="'date'">{{ selectedNodeDetails[prop.field] | date }}</span>
+                      <span *ngSwitchCase="'boolean'">{{ selectedNodeDetails[prop.field] ? 'Yes' : 'No' }}</span>
+                      <span *ngSwitchCase="'count'">{{ selectedNodeDetails[prop.field]?.length || 0 }}</span>
+                      <span *ngSwitchDefault>{{ selectedNodeDetails[prop.field] }}</span>
+                    </ng-container>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="details-actions">
+                <button 
+                  pButton 
+                  pRipple 
+                  type="button" 
+                  icon="pi pi-eye" 
+                  label="View Details" 
+                  class="p-button-info action-btn"
+                  (click)="viewNodeDetails()"
+                ></button>
+                <button 
+                  pButton 
+                  pRipple 
+                  type="button" 
+                  icon="pi pi-pencil" 
+                  label="Edit" 
+                  class="p-button-success action-btn" 
+                  (click)="editSelectedNode()"
+                ></button>
+                <button 
+                  pButton 
+                  pRipple 
+                  type="button" 
+                  icon="pi pi-trash" 
+                  label="Delete" 
+                  class="p-button-danger action-btn" 
+                  (click)="deleteSelectedNode()"
+                ></button>
+                <button 
+                  pButton 
+                  pRipple 
+                  type="button" 
+                  icon="pi pi-download" 
+                  label="Export" 
+                  class="p-button-secondary action-btn" 
+                  (click)="exportSelectedNode()"
+                  *ngIf="selectedNode.type !== 'project'"
+                ></button>
+              </div>
+            </div>
+          </ng-container>
+          
+          <div *ngIf="!selectedNode" class="no-selection stagger-item">
+            <div class="selection-hint">
+              <i class="pi pi-arrow-left hint-icon"></i>
+              <p class="hint-text">Select an item from the tree to view details</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Roots List -->
+    <div *ngIf="activeTab === 'list'" class="roots-list-container stagger-item">
+      <p-table 
+        [value]="roots" 
+        styleClass="custom-table"
+        [paginator]="true" 
+        [rows]="10" 
+        [rowsPerPageOptions]="[10, 25, 50]" 
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} roots"
+        [rowHover]="true"
+        responsiveLayout="scroll"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Messages</th>
+            <th>Created</th>
+            <th>Last Modified</th>
+            <th style="width: 150px">Actions</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-root>
+          <tr>
+            <td>{{ root.name }}</td>
+            <td>{{ root.description }}</td>
+            <td>{{ root.messages?.length || 0 }}</td>
+            <td>{{ root.createdDate | date:'short' }}</td>
+            <td>{{ root.lastModifiedDate | date:'short' }}</td>
+            <td>
+              <div class="table-actions">
+                <button 
+                  pButton 
+                  pRipple 
+                  type="button" 
+                  icon="pi pi-eye" 
+                  class="p-button-rounded p-button-info p-button-sm" 
+                  [routerLink]="['/roots', root.id]"
+                  pTooltip="View"
+                ></button>
+                <button 
+                  pButton 
+                  pRipple 
+                  type="button" 
+                  icon="pi pi-pencil" 
+                  class="p-button-rounded p-button-success p-button-sm" 
+                  (click)="showEditRootDialog(root)"
+                  pTooltip="Edit"
+                ></button>
+                <button 
+                  pButton 
+                  pRipple 
+                  type="button" 
+                  icon="pi pi-trash" 
+                  class="p-button-rounded p-button-danger p-button-sm" 
+                  (click)="confirmDeleteRoot(root)"
+                  pTooltip="Delete"
+                ></button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="6" class="empty-message">
+              <i class="pi pi-folder-open empty-icon"></i>
+              <p>No roots found for this project</p>
+              <button 
+                pButton 
+                pRipple 
+                type="button" 
+                label="Create Root" 
+                icon="pi pi-plus" 
+                class="p-button-success p-button-sm" 
+                (click)="showCreateRootDialog()"
+              ></button>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </div>
+</div>
+
+<!-- Root dialog -->
+<p-dialog 
+  [(visible)]="rootDialogVisible" 
+  [header]="rootDialogHeader"
+  [modal]="true" 
+  [draggable]="false" 
+  [resizable]="false"
+  [style]="{width: '500px'}"
+  [contentStyle]="{padding: '1.5rem'}"
+  [dismissableMask]="true"
+  [closeOnEscape]="true"
+  styleClass="custom-dialog"
+>
+  <ng-container *ngIf="rootDialogVisible">
+    <div class="dialog-form">
+      <div class="form-field">
+        <label for="rootName" class="field-label">Name</label>
+        <input 
+          id="rootName" 
+          type="text" 
+          pInputText 
+          [(ngModel)]="editingRoot.name"
+          class="w-full field-input" 
+        />
+      </div>
+      
+      <div class="form-field">
+        <label for="rootDescription" class="field-label">Description</label>
+        <textarea 
+          id="rootDescription"
+          pInputText
+          [(ngModel)]="editingRoot.description"
+          rows="4"
+          class="w-full field-input textarea"
+        ></textarea>
+      </div>
+    </div>
+  </ng-container>
+  
+  <ng-template pTemplate="footer">
+    <button 
+      pButton 
+      pRipple 
+      type="button" 
+      label="Cancel" 
+      icon="pi pi-times" 
+      class="p-button-outlined" 
+      (click)="rootDialogVisible = false"
+    ></button>
+    <button 
+      pButton 
+      pRipple 
+      type="button" 
+      label="Save" 
+      icon="pi pi-check" 
+      class="p-button-success" 
+      (click)="saveRoot()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Export dialog -->
+<p-dialog 
+  [(visible)]="exportDialogVisible"
+  header="Exported XML"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{width: '80vw'}"
+  [contentStyle]="{padding: '0'}"
+  [dismissableMask]="true"
+  [closeOnEscape]="true"
+  styleClass="custom-dialog export-dialog"
+>
+  <div class="export-content">
+    <pre class="export-code">{{ exportedXml }}</pre>
+  </div>
+  
+  <ng-template pTemplate="footer">
+    <button 
+      pButton 
+      pRipple 
+      type="button" 
+      label="Copy" 
+      icon="pi pi-copy" 
+      class="p-button-primary" 
+      (click)="copyToClipboard(exportedXml)"
+    ></button>
+    <button 
+      pButton 
+      pRipple 
+      type="button" 
+      label="Close" 
+      icon="pi pi-times" 
+      class="p-button-outlined" 
+      (click)="exportDialogVisible = false"
+    ></button>
+  </ng-template>
+</p-dialog>
