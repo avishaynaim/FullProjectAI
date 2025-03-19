@@ -61,111 +61,111 @@ namespace TreeViewApp.Data
 // Improved SeedData method for ApplicationDbContext.cs
 private void SeedData(ModelBuilder modelBuilder)
 {
-    // ======== PROJECTS ========
-    var project1Id = Guid.NewGuid();
-    var project2Id = Guid.NewGuid();
-    var project3Id = Guid.NewGuid();
+  // Project GUIDs
+ Guid project1Id = new Guid("00000000-0000-0000-0000-000000000001");
+ Guid project2Id = new Guid("00000000-0000-0000-0000-000000000002");
+ Guid project3Id = new Guid("00000000-0000-0000-0000-000000000003");
 
-    // ======== ROOTS ========
-    // Project 1 Roots
-    var root1_1Id = Guid.NewGuid();
-    var root1_2Id = Guid.NewGuid();
-    var root1_3Id = Guid.NewGuid();
-    var root1_4Id = Guid.NewGuid();
-    var root1_5Id = Guid.NewGuid();
-    var root1_6Id = Guid.NewGuid();
-    var root1_7Id = Guid.NewGuid();
-    var root1_8Id = Guid.NewGuid();
-    var root1_9Id = Guid.NewGuid();
-    var root1_10Id = Guid.NewGuid();
-    
-    // Project 2 Roots
-    var root2_1Id = Guid.NewGuid();
-    var root2_2Id = Guid.NewGuid();
-    var root2_3Id = Guid.NewGuid();
-    var root2_4Id = Guid.NewGuid();
-    var root2_5Id = Guid.NewGuid();
-    var root2_6Id = Guid.NewGuid();
-    var root2_7Id = Guid.NewGuid();
-    var root2_8Id = Guid.NewGuid();
-    var root2_9Id = Guid.NewGuid();
-    var root2_10Id = Guid.NewGuid();
-    
-    // Project 3 Roots
-    var root3_1Id = Guid.NewGuid();
-    var root3_2Id = Guid.NewGuid();
-    var root3_3Id = Guid.NewGuid();
-    var root3_4Id = Guid.NewGuid();
-    var root3_5Id = Guid.NewGuid();
-    var root3_6Id = Guid.NewGuid();
-    var root3_7Id = Guid.NewGuid();
-    var root3_8Id = Guid.NewGuid();
-    var root3_9Id = Guid.NewGuid();
-    var root3_10Id = Guid.NewGuid();
+// ======== ROOTS ========
+// Project 1 Roots
+ Guid root1_1Id = new Guid("00000000-0000-0000-0000-000000000101");
+ Guid root1_2Id = new Guid("00000000-0000-0000-0000-000000000102");
+ Guid root1_3Id = new Guid("00000000-0000-0000-0000-000000000103");
+ Guid root1_4Id = new Guid("00000000-0000-0000-0000-000000000104");
+ Guid root1_5Id = new Guid("00000000-0000-0000-0000-000000000105");
+ Guid root1_6Id = new Guid("00000000-0000-0000-0000-000000000106");
+ Guid root1_7Id = new Guid("00000000-0000-0000-0000-000000000107");
+ Guid root1_8Id = new Guid("00000000-0000-0000-0000-000000000108");
+ Guid root1_9Id = new Guid("00000000-0000-0000-0000-000000000109");
+ Guid root1_10Id = new Guid("00000000-0000-0000-0000-00000000010A");
 
-    // ======== MESSAGES ========
-    // Just declaring some message IDs for roots in Project 1 (for brevity)
-    var msg1_1Id = Guid.NewGuid();
-    var msg1_2Id = Guid.NewGuid();
-    var msg1_3Id = Guid.NewGuid();
-    var msg1_4Id = Guid.NewGuid();
-    var msg1_5Id = Guid.NewGuid();
-    
-    // ======== FIELDS ========
-    // Just declaring some field IDs for a message in Project 1 (for brevity)
-    var field1_1Id = Guid.NewGuid();
-    var field1_2Id = Guid.NewGuid();
-    var field1_3Id = Guid.NewGuid();
-    var field1_4Id = Guid.NewGuid();
-    var field1_5Id = Guid.NewGuid();
-    
-    // Complex field with child fields
-    var complexField1Id = Guid.NewGuid();
-    var childField1Id = Guid.NewGuid();
-    var childField2Id = Guid.NewGuid();
-    var childField3Id = Guid.NewGuid();
-    var childField4Id = Guid.NewGuid();
-    var childField5Id = Guid.NewGuid();
-    
-    // Nested complex field
-    var nestedComplexFieldId = Guid.NewGuid();
-    var nestedChild1Id = Guid.NewGuid();
-    var nestedChild2Id = Guid.NewGuid();
-    var nestedChild3Id = Guid.NewGuid();
-    
-    // Enum field with values
-    var enumFieldId = Guid.NewGuid();
-    var enumValue1Id = Guid.NewGuid();
-    var enumValue2Id = Guid.NewGuid();
-    var enumValue3Id = Guid.NewGuid();
-    var enumValue4Id = Guid.NewGuid();
-    var enumValue5Id = Guid.NewGuid();
+// Project 2 Roots
+ Guid root2_1Id = new Guid("00000000-0000-0000-0000-000000000201");
+ Guid root2_2Id = new Guid("00000000-0000-0000-0000-000000000202");
+ Guid root2_3Id = new Guid("00000000-0000-0000-0000-000000000203");
+ Guid root2_4Id = new Guid("00000000-0000-0000-0000-000000000204");
+ Guid root2_5Id = new Guid("00000000-0000-0000-0000-000000000205");
+ Guid root2_6Id = new Guid("00000000-0000-0000-0000-000000000206");
+ Guid root2_7Id = new Guid("00000000-0000-0000-0000-000000000207");
+ Guid root2_8Id = new Guid("00000000-0000-0000-0000-000000000208");
+ Guid root2_9Id = new Guid("00000000-0000-0000-0000-000000000209");
+ Guid root2_10Id = new Guid("00000000-0000-0000-0000-00000000020A");
+
+// Project 3 Roots
+ Guid root3_1Id = new Guid("00000000-0000-0000-0000-000000000301");
+ Guid root3_2Id = new Guid("00000000-0000-0000-0000-000000000302");
+ Guid root3_3Id = new Guid("00000000-0000-0000-0000-000000000303");
+ Guid root3_4Id = new Guid("00000000-0000-0000-0000-000000000304");
+ Guid root3_5Id = new Guid("00000000-0000-0000-0000-000000000305");
+ Guid root3_6Id = new Guid("00000000-0000-0000-0000-000000000306");
+ Guid root3_7Id = new Guid("00000000-0000-0000-0000-000000000307");
+ Guid root3_8Id = new Guid("00000000-0000-0000-0000-000000000308");
+ Guid root3_9Id = new Guid("00000000-0000-0000-0000-000000000309");
+ Guid root3_10Id = new Guid("00000000-0000-0000-0000-00000000030A");
+
+// ======== MESSAGES ========
+// Just declaring some message IDs for roots in Project 1 (for brevity)
+ Guid msg1_1Id = new Guid("00000000-0000-0000-0000-000000000401");
+ Guid msg1_2Id = new Guid("00000000-0000-0000-0000-000000000402");
+ Guid msg1_3Id = new Guid("00000000-0000-0000-0000-000000000403");
+ Guid msg1_4Id = new Guid("00000000-0000-0000-0000-000000000404");
+ Guid msg1_5Id = new Guid("00000000-0000-0000-0000-000000000405");
+
+// ======== FIELDS ========
+// Just declaring some field IDs for a message in Project 1 (for brevity)
+ Guid field1_1Id = new Guid("00000000-0000-0000-0000-000000000501");
+ Guid field1_2Id = new Guid("00000000-0000-0000-0000-000000000502");
+ Guid field1_3Id = new Guid("00000000-0000-0000-0000-000000000503");
+ Guid field1_4Id = new Guid("00000000-0000-0000-0000-000000000504");
+ Guid field1_5Id = new Guid("00000000-0000-0000-0000-000000000505");
+
+// Complex field with child fields
+ Guid complexField1Id = new Guid("00000000-0000-0000-0000-000000000601");
+ Guid childField1Id = new Guid("00000000-0000-0000-0000-000000000602");
+ Guid childField2Id = new Guid("00000000-0000-0000-0000-000000000603");
+ Guid childField3Id = new Guid("00000000-0000-0000-0000-000000000604");
+ Guid childField4Id = new Guid("00000000-0000-0000-0000-000000000605");
+ Guid childField5Id = new Guid("00000000-0000-0000-0000-000000000606");
+
+// Nested complex field
+ Guid nestedComplexFieldId = new Guid("00000000-0000-0000-0000-000000000701");
+ Guid nestedChild1Id = new Guid("00000000-0000-0000-0000-000000000702");
+ Guid nestedChild2Id = new Guid("00000000-0000-0000-0000-000000000703");
+ Guid nestedChild3Id = new Guid("00000000-0000-0000-0000-000000000704");
+
+// Enum field with values
+ Guid enumFieldId = new Guid("00000000-0000-0000-0000-000000000801");
+ Guid enumValue1Id = new Guid("00000000-0000-0000-0000-000000000802");
+ Guid enumValue2Id = new Guid("00000000-0000-0000-0000-000000000803");
+ Guid enumValue3Id = new Guid("00000000-0000-0000-0000-000000000804");
+ Guid enumValue4Id = new Guid("00000000-0000-0000-0000-000000000805");
+ Guid enumValue5Id = new Guid("00000000-0000-0000-0000-000000000806");
 
     // =================== SEED PROJECTS ===================
-    modelBuilder.Entity<Project>().HasData(
+  modelBuilder.Entity<Project>().HasData(
         new Project
         {
             Id = project1Id,
             Name = "API Integration Platform",
             Description = "Comprehensive API integration platform with support for multiple third-party services",
-            CreatedDate = DateTime.Now.AddDays(-120),
-            LastModifiedDate = DateTime.Now.AddDays(-5),
+            CreatedDate = new DateTime(2024, 11, 20), // Fixed date instead of DateTime.Now.AddDays(-120)
+            LastModifiedDate = new DateTime(2025, 3, 14), // Fixed date instead of DateTime.Now.AddDays(-5)
         },
         new Project
         {
             Id = project2Id,
             Name = "Enterprise E-Commerce System",
             Description = "Scalable B2B/B2C e-commerce system with inventory management and payment processing",
-            CreatedDate = DateTime.Now.AddDays(-90),
-            LastModifiedDate = DateTime.Now.AddDays(-2),
+            CreatedDate = new DateTime(2024, 12, 20), // Fixed date instead of DateTime.Now.AddDays(-90)
+            LastModifiedDate = new DateTime(2025, 3, 17), // Fixed date instead of DateTime.Now.AddDays(-2)
         },
         new Project
         {
             Id = project3Id,
             Name = "IoT Data Analytics Platform",
             Description = "Real-time data collection and analytics platform for IoT devices and sensors",
-            CreatedDate = DateTime.Now.AddDays(-60),
-            LastModifiedDate = DateTime.Now.AddDays(-1),
+            CreatedDate = new DateTime(2025, 1, 19), // Fixed date instead of DateTime.Now.AddDays(-60)
+            LastModifiedDate = new DateTime(2025, 3, 18), // Fixed date instead of DateTime.Now.AddDays(-1)
         }
     );
 
@@ -177,8 +177,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Id = root1_1Id,
             Name = "Payment Gateway",
             Description = "Integration with multiple payment processors",
-            CreatedDate = DateTime.Now.AddDays(-115),
-            LastModifiedDate = DateTime.Now.AddDays(-10),
+            CreatedDate = new DateTime(2024, 11, 25), // Fixed date instead of DateTime.Now.AddDays(-115)
+            LastModifiedDate = new DateTime(2025, 3, 9), // Fixed date instead of DateTime.Now.AddDays(-10)
             ProjectId = project1Id,
         },
         new Root
@@ -186,8 +186,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Id = root1_2Id,
             Name = "Social Media",
             Description = "Social media API integrations",
-            CreatedDate = DateTime.Now.AddDays(-110),
-            LastModifiedDate = DateTime.Now.AddDays(-9),
+            CreatedDate = new DateTime(2024, 11, 30), // Fixed date instead of DateTime.Now.AddDays(-110)
+            LastModifiedDate = new DateTime(2025, 3, 10), // Fixed date instead of DateTime.Now.AddDays(-9)
             ProjectId = project1Id,
         },
         new Root
@@ -195,8 +195,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Id = root1_3Id,
             Name = "Email Services",
             Description = "Email delivery and tracking services",
-            CreatedDate = DateTime.Now.AddDays(-105),
-            LastModifiedDate = DateTime.Now.AddDays(-8),
+            CreatedDate = new DateTime(2024, 12, 5), // Fixed date instead of DateTime.Now.AddDays(-105)
+            LastModifiedDate = new DateTime(2025, 3, 11), // Fixed date instead of DateTime.Now.AddDays(-8)
             ProjectId = project1Id,
         },
         new Root
@@ -204,8 +204,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Id = root1_4Id,
             Name = "Analytics Services",
             Description = "User behavior and application analytics",
-            CreatedDate = DateTime.Now.AddDays(-100),
-            LastModifiedDate = DateTime.Now.AddDays(-7),
+            CreatedDate = new DateTime(2024, 12, 10), // Fixed date instead of DateTime.Now.AddDays(-100)
+            LastModifiedDate = new DateTime(2025, 3, 12), // Fixed date instead of DateTime.Now.AddDays(-7)
             ProjectId = project1Id,
         },
         new Root
@@ -213,8 +213,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Id = root1_5Id,
             Name = "Authentication",
             Description = "OAuth and other authentication providers",
-            CreatedDate = DateTime.Now.AddDays(-95),
-            LastModifiedDate = DateTime.Now.AddDays(-6),
+            CreatedDate = new DateTime(2024, 12, 15), // Fixed date instead of DateTime.Now.AddDays(-95)
+            LastModifiedDate = new DateTime(2025, 3, 13), // Fixed date instead of DateTime.Now.AddDays(-6)
             ProjectId = project1Id,
         },
         new Root
@@ -222,8 +222,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Id = root1_6Id,
             Name = "Shipping Services",
             Description = "Shipping and logistics providers",
-            CreatedDate = DateTime.Now.AddDays(-90),
-            LastModifiedDate = DateTime.Now.AddDays(-5),
+            CreatedDate = new DateTime(2024, 12, 20), // Fixed date instead of DateTime.Now.AddDays(-90)
+            LastModifiedDate = new DateTime(2025, 3, 14), // Fixed date instead of DateTime.Now.AddDays(-5)
             ProjectId = project1Id,
         },
         new Root
@@ -231,8 +231,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Id = root1_7Id,
             Name = "Mapping Services",
             Description = "Geolocation and mapping providers",
-            CreatedDate = DateTime.Now.AddDays(-85),
-            LastModifiedDate = DateTime.Now.AddDays(-4),
+            CreatedDate = new DateTime(2024, 12, 25), // Fixed date instead of DateTime.Now.AddDays(-85)
+            LastModifiedDate = new DateTime(2025, 3, 15), // Fixed date instead of DateTime.Now.AddDays(-4)
             ProjectId = project1Id,
         },
         new Root
@@ -240,8 +240,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Id = root1_8Id,
             Name = "Cloud Storage",
             Description = "Cloud storage and file management",
-            CreatedDate = DateTime.Now.AddDays(-80),
-            LastModifiedDate = DateTime.Now.AddDays(-3),
+            CreatedDate = new DateTime(2024, 12, 30), // Fixed date instead of DateTime.Now.AddDays(-80)
+            LastModifiedDate = new DateTime(2025, 3, 16), // Fixed date instead of DateTime.Now.AddDays(-3)
             ProjectId = project1Id,
         },
         new Root
@@ -249,8 +249,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Id = root1_9Id,
             Name = "Messaging Services",
             Description = "SMS and push notification providers",
-            CreatedDate = DateTime.Now.AddDays(-75),
-            LastModifiedDate = DateTime.Now.AddDays(-2),
+            CreatedDate = new DateTime(2025, 1, 4), // Fixed date instead of DateTime.Now.AddDays(-75)
+            LastModifiedDate = new DateTime(2025, 3, 17), // Fixed date instead of DateTime.Now.AddDays(-2)
             ProjectId = project1Id,
         },
         new Root
@@ -258,8 +258,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Id = root1_10Id,
             Name = "Data Enrichment",
             Description = "Data enrichment and validation services",
-            CreatedDate = DateTime.Now.AddDays(-70),
-            LastModifiedDate = DateTime.Now.AddDays(-1),
+            CreatedDate = new DateTime(2025, 1, 9), // Fixed date instead of DateTime.Now.AddDays(-70)
+            LastModifiedDate = new DateTime(2025, 3, 18), // Fixed date instead of DateTime.Now.AddDays(-1)
             ProjectId = project1Id,
         }
     );
@@ -271,8 +271,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Id = root2_1Id,
             Name = "Product Catalog",
             Description = "Product information and categorization",
-            CreatedDate = DateTime.Now.AddDays(-85),
-            LastModifiedDate = DateTime.Now.AddDays(-10),
+            CreatedDate = new DateTime(2024, 12, 25), // Fixed date instead of DateTime.Now.AddDays(-85)
+            LastModifiedDate = new DateTime(2025, 3, 9), // Fixed date instead of DateTime.Now.AddDays(-10)
             ProjectId = project2Id,
         },
         new Root
@@ -280,8 +280,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Id = root2_2Id,
             Name = "Customer Management",
             Description = "Customer profiles and segmentation",
-            CreatedDate = DateTime.Now.AddDays(-84),
-            LastModifiedDate = DateTime.Now.AddDays(-9),
+            CreatedDate = new DateTime(2024, 12, 26), // Fixed date instead of DateTime.Now.AddDays(-84)
+            LastModifiedDate = new DateTime(2025, 3, 10), // Fixed date instead of DateTime.Now.AddDays(-9)
             ProjectId = project2Id,
         },
         new Root
@@ -289,8 +289,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Id = root2_3Id,
             Name = "Order Processing",
             Description = "Order creation and fulfillment",
-            CreatedDate = DateTime.Now.AddDays(-83),
-            LastModifiedDate = DateTime.Now.AddDays(-8),
+            CreatedDate = new DateTime(2024, 12, 27), // Fixed date instead of DateTime.Now.AddDays(-83)
+            LastModifiedDate = new DateTime(2025, 3, 11), // Fixed date instead of DateTime.Now.AddDays(-8)
             ProjectId = project2Id,
         },
         new Root
@@ -298,8 +298,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Id = root2_4Id,
             Name = "Inventory Management",
             Description = "Stock levels and inventory tracking",
-            CreatedDate = DateTime.Now.AddDays(-82),
-            LastModifiedDate = DateTime.Now.AddDays(-7),
+            CreatedDate = new DateTime(2024, 12, 28), // Fixed date instead of DateTime.Now.AddDays(-82)
+            LastModifiedDate = new DateTime(2025, 3, 12), // Fixed date instead of DateTime.Now.AddDays(-7)
             ProjectId = project2Id,
         },
         new Root
@@ -307,8 +307,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Id = root2_5Id,
             Name = "Payment Processing",
             Description = "Payment methods and transactions",
-            CreatedDate = DateTime.Now.AddDays(-81),
-            LastModifiedDate = DateTime.Now.AddDays(-6),
+            CreatedDate = new DateTime(2024, 12, 29), // Fixed date instead of DateTime.Now.AddDays(-81)
+            LastModifiedDate = new DateTime(2025, 3, 13), // Fixed date instead of DateTime.Now.AddDays(-6)
             ProjectId = project2Id,
         },
         new Root
@@ -316,8 +316,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Id = root2_6Id,
             Name = "Shipping",
             Description = "Shipping options and tracking",
-            CreatedDate = DateTime.Now.AddDays(-80),
-            LastModifiedDate = DateTime.Now.AddDays(-5),
+            CreatedDate = new DateTime(2024, 12, 30), // Fixed date instead of DateTime.Now.AddDays(-80)
+            LastModifiedDate = new DateTime(2025, 3, 14), // Fixed date instead of DateTime.Now.AddDays(-5)
             ProjectId = project2Id,
         },
         new Root
@@ -325,8 +325,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Id = root2_7Id,
             Name = "Promotions",
             Description = "Discounts and promotional campaigns",
-            CreatedDate = DateTime.Now.AddDays(-79),
-            LastModifiedDate = DateTime.Now.AddDays(-4),
+            CreatedDate = new DateTime(2024, 12, 31), // Fixed date instead of DateTime.Now.AddDays(-79)
+            LastModifiedDate = new DateTime(2025, 3, 15), // Fixed date instead of DateTime.Now.AddDays(-4)
             ProjectId = project2Id,
         },
         new Root
@@ -334,8 +334,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Id = root2_8Id,
             Name = "Tax Calculation",
             Description = "Tax rates and calculations",
-            CreatedDate = DateTime.Now.AddDays(-78),
-            LastModifiedDate = DateTime.Now.AddDays(-3),
+            CreatedDate = new DateTime(2025, 1, 1), // Fixed date instead of DateTime.Now.AddDays(-78)
+            LastModifiedDate = new DateTime(2025, 3, 16), // Fixed date instead of DateTime.Now.AddDays(-3)
             ProjectId = project2Id,
         },
         new Root
@@ -343,8 +343,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Id = root2_9Id,
             Name = "Returns Management",
             Description = "Return requests and processing",
-            CreatedDate = DateTime.Now.AddDays(-77),
-            LastModifiedDate = DateTime.Now.AddDays(-2),
+            CreatedDate = new DateTime(2025, 1, 2), // Fixed date instead of DateTime.Now.AddDays(-77)
+            LastModifiedDate = new DateTime(2025, 3, 17), // Fixed date instead of DateTime.Now.AddDays(-2)
             ProjectId = project2Id,
         },
         new Root
@@ -352,8 +352,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Id = root2_10Id,
             Name = "Reporting",
             Description = "Sales and analytics reporting",
-            CreatedDate = DateTime.Now.AddDays(-76),
-            LastModifiedDate = DateTime.Now.AddDays(-1),
+            CreatedDate = new DateTime(2025, 1, 3), // Fixed date instead of DateTime.Now.AddDays(-76)
+            LastModifiedDate = new DateTime(2025, 3, 18), // Fixed date instead of DateTime.Now.AddDays(-1)
             ProjectId = project2Id,
         }
     );
@@ -365,8 +365,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Id = root3_1Id,
             Name = "Device Registration",
             Description = "IoT device onboarding and registration",
-            CreatedDate = DateTime.Now.AddDays(-55),
-            LastModifiedDate = DateTime.Now.AddDays(-10),
+            CreatedDate = new DateTime(2025, 1, 24), // Fixed date instead of DateTime.Now.AddDays(-55)
+            LastModifiedDate = new DateTime(2025, 3, 9), // Fixed date instead of DateTime.Now.AddDays(-10)
             ProjectId = project3Id,
         },
         new Root
@@ -374,8 +374,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Id = root3_2Id,
             Name = "Data Collection",
             Description = "Sensor data collection and normalization",
-            CreatedDate = DateTime.Now.AddDays(-54),
-            LastModifiedDate = DateTime.Now.AddDays(-9),
+            CreatedDate = new DateTime(2025, 1, 25), // Fixed date instead of DateTime.Now.AddDays(-54)
+            LastModifiedDate = new DateTime(2025, 3, 10), // Fixed date instead of DateTime.Now.AddDays(-9)
             ProjectId = project3Id,
         },
         new Root
@@ -383,8 +383,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Id = root3_3Id,
             Name = "Real-time Processing",
             Description = "Stream processing of sensor data",
-            CreatedDate = DateTime.Now.AddDays(-53),
-            LastModifiedDate = DateTime.Now.AddDays(-8),
+            CreatedDate = new DateTime(2025, 1, 26), // Fixed date instead of DateTime.Now.AddDays(-53)
+            LastModifiedDate = new DateTime(2025, 3, 11), // Fixed date instead of DateTime.Now.AddDays(-8)
             ProjectId = project3Id,
         },
         new Root
@@ -392,8 +392,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Id = root3_4Id,
             Name = "Long-term Storage",
             Description = "Data warehousing for historical analysis",
-            CreatedDate = DateTime.Now.AddDays(-52),
-            LastModifiedDate = DateTime.Now.AddDays(-7),
+            CreatedDate = new DateTime(2025, 1, 27), // Fixed date instead of DateTime.Now.AddDays(-52)
+            LastModifiedDate = new DateTime(2025, 3, 12), // Fixed date instead of DateTime.Now.AddDays(-7)
             ProjectId = project3Id,
         },
         new Root
@@ -401,8 +401,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Id = root3_5Id,
             Name = "Alerting System",
             Description = "Anomaly detection and notification",
-            CreatedDate = DateTime.Now.AddDays(-51),
-            LastModifiedDate = DateTime.Now.AddDays(-6),
+            CreatedDate = new DateTime(2025, 1, 28), // Fixed date instead of DateTime.Now.AddDays(-51)
+            LastModifiedDate = new DateTime(2025, 3, 13), // Fixed date instead of DateTime.Now.AddDays(-6)
             ProjectId = project3Id,
         },
         new Root
@@ -410,8 +410,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Id = root3_6Id,
             Name = "Visualization",
             Description = "Data visualization and dashboards",
-            CreatedDate = DateTime.Now.AddDays(-50),
-            LastModifiedDate = DateTime.Now.AddDays(-5),
+            CreatedDate = new DateTime(2025, 1, 29), // Fixed date instead of DateTime.Now.AddDays(-50)
+            LastModifiedDate = new DateTime(2025, 3, 14), // Fixed date instead of DateTime.Now.AddDays(-5)
             ProjectId = project3Id,
         },
         new Root
@@ -419,8 +419,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Id = root3_7Id,
             Name = "Predictive Analytics",
             Description = "Machine learning for predictive insights",
-            CreatedDate = DateTime.Now.AddDays(-49),
-            LastModifiedDate = DateTime.Now.AddDays(-4),
+            CreatedDate = new DateTime(2025, 1, 30), // Fixed date instead of DateTime.Now.AddDays(-49)
+            LastModifiedDate = new DateTime(2025, 3, 15), // Fixed date instead of DateTime.Now.AddDays(-4)
             ProjectId = project3Id,
         },
         new Root
@@ -428,8 +428,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Id = root3_8Id,
             Name = "Device Management",
             Description = "Remote configuration and updates",
-            CreatedDate = DateTime.Now.AddDays(-48),
-            LastModifiedDate = DateTime.Now.AddDays(-3),
+            CreatedDate = new DateTime(2025, 1, 31), // Fixed date instead of DateTime.Now.AddDays(-48)
+            LastModifiedDate = new DateTime(2025, 3, 16), // Fixed date instead of DateTime.Now.AddDays(-3)
             ProjectId = project3Id,
         },
         new Root
@@ -437,8 +437,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Id = root3_9Id,
             Name = "User Access",
             Description = "User permissions and authentication",
-            CreatedDate = DateTime.Now.AddDays(-47),
-            LastModifiedDate = DateTime.Now.AddDays(-2),
+            CreatedDate = new DateTime(2025, 2, 1), // Fixed date instead of DateTime.Now.AddDays(-47)
+            LastModifiedDate = new DateTime(2025, 3, 17), // Fixed date instead of DateTime.Now.AddDays(-2)
             ProjectId = project3Id,
         },
         new Root
@@ -446,8 +446,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Id = root3_10Id,
             Name = "API Services",
             Description = "External API integration for IoT platform",
-            CreatedDate = DateTime.Now.AddDays(-46),
-            LastModifiedDate = DateTime.Now.AddDays(-1),
+            CreatedDate = new DateTime(2025, 2, 2), // Fixed date instead of DateTime.Now.AddDays(-46)
+            LastModifiedDate = new DateTime(2025, 3, 18), // Fixed date instead of DateTime.Now.AddDays(-1)
             ProjectId = project3Id,
         }
     );
@@ -460,8 +460,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Id = msg1_1Id,
             Name = "Process Payment",
             Description = "Request to process a payment transaction",
-            CreatedDate = DateTime.Now.AddDays(-114),
-            LastModifiedDate = DateTime.Now.AddDays(-10),
+            CreatedDate = new DateTime(2024, 11, 26), // Fixed date instead of DateTime.Now.AddDays(-114)
+            LastModifiedDate = new DateTime(2025, 3, 9), // Fixed date instead of DateTime.Now.AddDays(-10)
             RootId = root1_1Id,
         },
         new Message
@@ -469,8 +469,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Id = msg1_2Id,
             Name = "Payment Response",
             Description = "Response from payment processor",
-            CreatedDate = DateTime.Now.AddDays(-113),
-            LastModifiedDate = DateTime.Now.AddDays(-9),
+            CreatedDate = new DateTime(2024, 11, 27), // Fixed date instead of DateTime.Now.AddDays(-113)
+            LastModifiedDate = new DateTime(2025, 3, 10), // Fixed date instead of DateTime.Now.AddDays(-9)
             RootId = root1_1Id,
         },
         new Message
@@ -478,8 +478,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Id = msg1_3Id,
             Name = "Payment Refund",
             Description = "Request to refund a processed payment",
-            CreatedDate = DateTime.Now.AddDays(-112),
-            LastModifiedDate = DateTime.Now.AddDays(-8),
+            CreatedDate = new DateTime(2024, 11, 28), // Fixed date instead of DateTime.Now.AddDays(-112)
+            LastModifiedDate = new DateTime(2025, 3, 11), // Fixed date instead of DateTime.Now.AddDays(-8)
             RootId = root1_1Id,
         },
         new Message
@@ -487,8 +487,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Id = msg1_4Id,
             Name = "Refund Response",
             Description = "Response from payment processor for refund",
-            CreatedDate = DateTime.Now.AddDays(-111),
-            LastModifiedDate = DateTime.Now.AddDays(-7),
+            CreatedDate = new DateTime(2024, 11, 29), // Fixed date instead of DateTime.Now.AddDays(-111)
+            LastModifiedDate = new DateTime(2025, 3, 12), // Fixed date instead of DateTime.Now.AddDays(-7)
             RootId = root1_1Id,
         },
         new Message
@@ -496,8 +496,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Id = msg1_5Id,
             Name = "Payment Status",
             Description = "Request to check payment status",
-            CreatedDate = DateTime.Now.AddDays(-110),
-            LastModifiedDate = DateTime.Now.AddDays(-6),
+            CreatedDate = new DateTime(2024, 11, 30), // Fixed date instead of DateTime.Now.AddDays(-110)
+            LastModifiedDate = new DateTime(2025, 3, 13), // Fixed date instead of DateTime.Now.AddDays(-6)
             RootId = root1_1Id,
         }
     );
@@ -513,8 +513,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Type = FieldType.Decimal,
             DefaultValue = "0",
             IsRequired = true,
-            CreatedDate = DateTime.Now.AddDays(-114),
-            LastModifiedDate = DateTime.Now.AddDays(-10),
+            CreatedDate = new DateTime(2024, 11, 26), // Fixed date instead of DateTime.Now.AddDays(-114)
+            LastModifiedDate = new DateTime(2025, 3, 9), // Fixed date instead of DateTime.Now.AddDays(-10)
             MessageId = msg1_1Id,
             ParentFieldId = null
         },
@@ -526,8 +526,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Type = FieldType.String,
             DefaultValue = "USD",
             IsRequired = true,
-            CreatedDate = DateTime.Now.AddDays(-114),
-            LastModifiedDate = DateTime.Now.AddDays(-10),
+            CreatedDate = new DateTime(2024, 11, 26), // Fixed date instead of DateTime.Now.AddDays(-114)
+            LastModifiedDate = new DateTime(2025, 3, 9), // Fixed date instead of DateTime.Now.AddDays(-10)
             MessageId = msg1_1Id,
             ParentFieldId = null
         },
@@ -539,8 +539,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Type = FieldType.String,
             DefaultValue = "",
             IsRequired = true,
-            CreatedDate = DateTime.Now.AddDays(-114),
-            LastModifiedDate = DateTime.Now.AddDays(-10),
+            CreatedDate = new DateTime(2024, 11, 26), // Fixed date instead of DateTime.Now.AddDays(-114)
+            LastModifiedDate = new DateTime(2025, 3, 9), // Fixed date instead of DateTime.Now.AddDays(-10)
             MessageId = msg1_1Id,
             ParentFieldId = null
         },
@@ -552,8 +552,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Type = FieldType.String,
             DefaultValue = "",
             IsRequired = false,
-            CreatedDate = DateTime.Now.AddDays(-114),
-            LastModifiedDate = DateTime.Now.AddDays(-10),
+            CreatedDate = new DateTime(2024, 11, 26), // Fixed date instead of DateTime.Now.AddDays(-114)
+            LastModifiedDate = new DateTime(2025, 3, 9), // Fixed date instead of DateTime.Now.AddDays(-10)
             MessageId = msg1_1Id,
             ParentFieldId = null
         },
@@ -565,8 +565,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Type = FieldType.DateTime,
             DefaultValue = "",
             IsRequired = true,
-            CreatedDate = DateTime.Now.AddDays(-114),
-            LastModifiedDate = DateTime.Now.AddDays(-10),
+            CreatedDate = new DateTime(2024, 11, 26), // Fixed date instead of DateTime.Now.AddDays(-114)
+            LastModifiedDate = new DateTime(2025, 3, 9), // Fixed date instead of DateTime.Now.AddDays(-10)
             MessageId = msg1_1Id,
             ParentFieldId = null
         }
@@ -582,8 +582,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Type = FieldType.Complex,
             DefaultValue = "",
             IsRequired = true,
-            CreatedDate = DateTime.Now.AddDays(-114),
-            LastModifiedDate = DateTime.Now.AddDays(-10),
+            CreatedDate = new DateTime(2024, 11, 26), // Fixed date instead of DateTime.Now.AddDays(-114)
+            LastModifiedDate = new DateTime(2025, 3, 9), // Fixed date instead of DateTime.Now.AddDays(-10)
             MessageId = msg1_1Id,
             ParentFieldId = null
         },
@@ -596,8 +596,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Type = FieldType.String,
             DefaultValue = "",
             IsRequired = true,
-            CreatedDate = DateTime.Now.AddDays(-114),
-            LastModifiedDate = DateTime.Now.AddDays(-10),
+            CreatedDate = new DateTime(2024, 11, 26), // Fixed date instead of DateTime.Now.AddDays(-114)
+            LastModifiedDate = new DateTime(2025, 3, 9), // Fixed date instead of DateTime.Now.AddDays(-10)
             MessageId = null,
             ParentFieldId = complexField1Id
         },
@@ -609,8 +609,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Type = FieldType.String,
             DefaultValue = "",
             IsRequired = true,
-            CreatedDate = DateTime.Now.AddDays(-114),
-            LastModifiedDate = DateTime.Now.AddDays(-10),
+            CreatedDate = new DateTime(2024, 11, 26), // Fixed date instead of DateTime.Now.AddDays(-114)
+            LastModifiedDate = new DateTime(2025, 3, 9), // Fixed date instead of DateTime.Now.AddDays(-10)
             MessageId = null,
             ParentFieldId = complexField1Id
         },
@@ -622,8 +622,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Type = FieldType.String,
             DefaultValue = "",
             IsRequired = true,
-            CreatedDate = DateTime.Now.AddDays(-114),
-            LastModifiedDate = DateTime.Now.AddDays(-10),
+            CreatedDate = new DateTime(2024, 11, 26), // Fixed date instead of DateTime.Now.AddDays(-114)
+            LastModifiedDate = new DateTime(2025, 3, 9), // Fixed date instead of DateTime.Now.AddDays(-10)
             MessageId = null,
             ParentFieldId = complexField1Id
         },
@@ -635,8 +635,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Type = FieldType.String,
             DefaultValue = "",
             IsRequired = false,
-            CreatedDate = DateTime.Now.AddDays(-114),
-            LastModifiedDate = DateTime.Now.AddDays(-10),
+            CreatedDate = new DateTime(2024, 11, 26), // Fixed date instead of DateTime.Now.AddDays(-114)
+            LastModifiedDate = new DateTime(2025, 3, 9), // Fixed date instead of DateTime.Now.AddDays(-10)
             MessageId = null,
             ParentFieldId = complexField1Id
         },
@@ -649,8 +649,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Type = FieldType.Complex,
             DefaultValue = "",
             IsRequired = false,
-            CreatedDate = DateTime.Now.AddDays(-114),
-            LastModifiedDate = DateTime.Now.AddDays(-10),
+            CreatedDate = new DateTime(2024, 11, 26), // Fixed date instead of DateTime.Now.AddDays(-114)
+            LastModifiedDate = new DateTime(2025, 3, 9), // Fixed date instead of DateTime.Now.AddDays(-10)
             MessageId = null,
             ParentFieldId = complexField1Id
         },
@@ -663,8 +663,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Type = FieldType.Complex,
             DefaultValue = "",
             IsRequired = false,
-            CreatedDate = DateTime.Now.AddDays(-114),
-            LastModifiedDate = DateTime.Now.AddDays(-10),
+            CreatedDate = new DateTime(2024, 11, 26), // Fixed date instead of DateTime.Now.AddDays(-114)
+            LastModifiedDate = new DateTime(2025, 3, 9), // Fixed date instead of DateTime.Now.AddDays(-10)
             MessageId = null,
             ParentFieldId = childField5Id
         },
@@ -676,8 +676,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Type = FieldType.String,
             DefaultValue = "",
             IsRequired = true,
-            CreatedDate = DateTime.Now.AddDays(-114),
-            LastModifiedDate = DateTime.Now.AddDays(-10),
+            CreatedDate = new DateTime(2024, 11, 26), // Fixed date instead of DateTime.Now.AddDays(-114)
+            LastModifiedDate = new DateTime(2025, 3, 9), // Fixed date instead of DateTime.Now.AddDays(-10)
             MessageId = null,
             ParentFieldId = nestedComplexFieldId
         },
@@ -689,8 +689,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Type = FieldType.String,
             DefaultValue = "",
             IsRequired = true,
-            CreatedDate = DateTime.Now.AddDays(-114),
-            LastModifiedDate = DateTime.Now.AddDays(-10),
+            CreatedDate = new DateTime(2024, 11, 26), // Fixed date instead of DateTime.Now.AddDays(-114)
+            LastModifiedDate = new DateTime(2025, 3, 9), // Fixed date instead of DateTime.Now.AddDays(-10)
             MessageId = null,
             ParentFieldId = nestedComplexFieldId
         },
@@ -702,8 +702,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Type = FieldType.String,
             DefaultValue = "",
             IsRequired = true,
-            CreatedDate = DateTime.Now.AddDays(-114),
-            LastModifiedDate = DateTime.Now.AddDays(-10),
+            CreatedDate = new DateTime(2024, 11, 26), // Fixed date instead of DateTime.Now.AddDays(-114)
+            LastModifiedDate = new DateTime(2025, 3, 9), // Fixed date instead of DateTime.Now.AddDays(-10)
             MessageId = null,
             ParentFieldId = nestedComplexFieldId
         }
@@ -719,8 +719,8 @@ private void SeedData(ModelBuilder modelBuilder)
             Type = FieldType.Enum,
             DefaultValue = "CreditCard",
             IsRequired = true,
-            CreatedDate = DateTime.Now.AddDays(-114),
-            LastModifiedDate = DateTime.Now.AddDays(-10),
+            CreatedDate = new DateTime(2024, 11, 26), // Fixed date instead of DateTime.Now.AddDays(-114)
+            LastModifiedDate = new DateTime(2025, 3, 9), // Fixed date instead of DateTime.Now.AddDays(-10)
             MessageId = msg1_1Id,
             ParentFieldId = null
         }

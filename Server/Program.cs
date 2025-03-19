@@ -32,8 +32,10 @@ builder.Services.AddCors(options =>
 builder.Services.AddSignalR();
 
 // Add DbContext
+// builder.Services.AddDbContext<ApplicationDbContext>(options =>
+//     options.UseInMemoryDatabase("TreeViewDb"));
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseInMemoryDatabase("TreeViewDb"));
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Register repositories
 builder.Services.AddScoped<IRepository<Project>, ProjectRepository>();

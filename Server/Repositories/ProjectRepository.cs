@@ -21,13 +21,27 @@ namespace TreeViewApp.Repositories
         {
             return await _context.Projects.Include(p => p.Roots).ToListAsync();
         }
-
-        public async Task<Project> GetByIdAsync(Guid id)
-        {
-            return await _context
-                .Projects.Include(p => p.Roots)
-                .FirstOrDefaultAsync(p => p.Id == id);
-        }
+public async Task<Project> GetByIdAsync(Guid id)
+{
+    // Enable more detailed entity tracking & loading
+    return await _context.Projects
+        .Include(p => p.Roots)
+            .ThenInclude(r => r.Messages)
+                .ThenInclude(m => m.Fields.Where(f => f.ParentFieldId == null))
+                    .ThenInclude(f => f.EnumValues)
+        .Include(p => p.Roots)
+            .ThenInclude(r => r.Messages)
+                .ThenInclude(m => m.Fields.Where(f => f.ParentFieldId == null))
+                    .ThenInclude(f => f.ChildFields)
+                        .ThenInclude(cf => cf.ChildFields)
+        .Include(p => p.Roots)
+            .ThenInclude(r => r.Messages)
+                .ThenInclude(m => m.Fields.Where(f => f.ParentFieldId == null))
+                    .ThenInclude(f => f.ChildFields)
+                        .ThenInclude(cf => cf.EnumValues)
+        .AsNoTracking() // Optional: can improve performance for read-only operations
+        .FirstOrDefaultAsync(p => p.Id == id);
+}
 
         public async Task<Project> AddAsync(Project project)
         {
