@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { Subject, takeUntil } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, combineLatest, of } from 'rxjs';
+import { filter, map, take, takeUntil, tap, withLatestFrom } from 'rxjs/operators';
 import { AppState } from '../../store/app.state';
 import { selectProjectById } from '../../store/project/project.selectors';
 import { selectRootsByProjectId } from '../../store/root/root.selectors';
@@ -73,29 +74,30 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
   styleUrls: ['./project-detail.component.scss']
 })
 export class ProjectDetailComponent implements OnInit, OnDestroy {
+  // Input parameters
   projectId: string = '';
-  project: Project | null = null;
-  roots: Root[] = [];
-  treeNodes: TreeNode[] = [];
-  selectedNode: any = null;
-  selectedNodeDetails: any = null;
-  activeTab: 'tree' | 'list' = 'tree';
-
-  breadcrumbs: any[] = [
-    { label: 'Projects', routerLink: ['/projects'] },
-    { label: 'Project Details' }
-  ];
-
-  searchTerm: string = '';
-
+  
+  // Observables
+  project$: Observable<Project | null>;
+  roots$: Observable<Root[]>;
+  treeNodes$: Observable<TreeNode[]>;
+  breadcrumbs$: Observable<any[]>;
+  selectedNodeDetails$: Observable<any>;
+  exportedXml$: Observable<string>;
+  
+  // UI state observables
+  activeTab$: BehaviorSubject<'tree' | 'list'> = new BehaviorSubject<'tree' | 'list'>('tree');
+  selectedNode$: BehaviorSubject<any> = new BehaviorSubject<any>(null);
+  searchTerm$: BehaviorSubject<string> = new BehaviorSubject<string>('');
+  
+  // Dialog state
   rootDialogVisible = false;
   rootDialogHeader = '';
   editingRoot: Partial<Root> = {};
   isEditingRoot = false;
-
+  
   exportDialogVisible = false;
-  exportedXml: string = '';
-
+  
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -105,52 +107,88 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     private confirmationService: ConfirmationService,
     private messageService: MessageService,
     private signalRService: SignalRService
-  ) { }
+  ) {
+    // Initialize observables that depend on injected services
+    this.project$ = of(null);
+    this.roots$ = of([]);
+    this.treeNodes$ = of([]);
+    this.breadcrumbs$ = of([]);
+    this.selectedNodeDetails$ = of(null);
+    this.exportedXml$ = this.store.select(state => state.roots.exportedXml).pipe(
+      filter((xml): xml is string => xml !== null)
+    );
+  }
 
   ngOnInit() {
     this.route.params.pipe(takeUntil(this.destroy$)).subscribe(params => {
       this.projectId = params['id'];
       
-      // Load project details
+      // Load project details and roots
       this.store.dispatch(loadProject({ id: this.projectId }));
-      
-      // Load roots for this project
       this.store.dispatch(loadRootsByProject({ projectId: this.projectId }));
       
       // Join SignalR group for this project
       this.signalRService.joinProject(this.projectId);
       
-      // Subscribe to project data
-      this.store.select(selectProjectById(this.projectId)).pipe(
-        takeUntil(this.destroy$)
-      ).subscribe(project => {
-        if (project) {
-          this.project = project;
-          this.breadcrumbs[1].label = project.name;
-          // Don't update tree nodes yet - we need roots data too
-        }
-      });
+      // Set up project observable
+      this.project$ = this.store.select(selectProjectById(this.projectId)).pipe(
+        filter(project => !!project) // Only emit when project is available
+      );
       
-      // Subscribe to roots data
-      this.store.select(selectRootsByProjectId(this.projectId)).pipe(
-        takeUntil(this.destroy$)
-      ).subscribe(roots => {
-        if (roots && roots.length > 0) {
-          console.log('Loaded roots:', roots);
-          this.roots = roots;
-          
-          // Only update tree nodes when we have both project and roots data
-          if (this.project) {
-            this.updateTreeNodes();
-            
-            // Auto expand first level of nodes for visibility
-            setTimeout(() => {
-              this.expandFirstLevel();
-            }, 100);
-          }
-        }
-      });
+      // Set up roots observable
+      this.roots$ = this.store.select(selectRootsByProjectId(this.projectId)).pipe(
+        filter(roots => !!roots) // Only emit when roots are available
+      );
+      
+      // Create breadcrumbs observable
+      this.breadcrumbs$ = this.project$.pipe(
+        map(project => [
+          { label: 'Projects', routerLink: ['/projects'] },
+          { label: 'Project', routerLink: ['/projects', project?.id || ''] },
+          { label: project?.name || 'Loading...' }
+        ])
+      );
+      
+      // Create treeNodes observable - combines project and roots
+      this.treeNodes$ = combineLatest([this.project$, this.roots$]).pipe(
+        map(([project, roots]) => this.buildTreeNodes(project!, roots))
+      );
+      
+      // Create selected node details observable
+      this.selectedNodeDetails$ = this.selectedNode$.pipe(
+        filter(node => !!node),
+        map(node => node?.data || null)
+      );
     });
+    
+    // When treeNodes are first loaded, expand the first level
+    this.treeNodes$.pipe(
+      takeUntil(this.destroy$),
+      filter(nodes => nodes.length > 0),
+      tap(nodes => setTimeout(() => this.expandFirstLevel(nodes), 100))
+    ).subscribe();
+    
+    // Handle search term filtering
+    this.searchTerm$.pipe(
+      takeUntil(this.destroy$),
+      withLatestFrom(this.treeNodes$),
+      tap(([term, nodes]) => {
+        if (term) {
+          this.filterTreeNodes(term, nodes);
+        } else {
+          // When search term is cleared, rebuild the tree
+          this.rebuildTreeNodes();
+        }
+      })
+    ).subscribe();
+  }
+  
+  // Method to rebuild tree nodes from source data
+  rebuildTreeNodes() {
+    // Recombine project and roots to rebuild the tree
+    this.treeNodes$ = combineLatest([this.project$, this.roots$]).pipe(
+      map(([project, roots]) => this.buildTreeNodes(project!, roots))
+    );
   }
   
   ngOnDestroy() {
@@ -158,138 +196,29 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     if (this.projectId) {
       this.signalRService.leaveProject(this.projectId);
     }
-
+    
     this.destroy$.next();
     this.destroy$.complete();
   }
 
-  // Find and select a node by key in the tree
-  findAndSelectNode(key: string) {
-    const findNode = (nodes: TreeNode[]): TreeNode | null => {
-      for (const node of nodes) {
-        if (node.key === key) {
-          return node;
-        }
-        if (node.children) {
-          const found = findNode(node.children);
-          if (found) {
-            return found;
-          }
-        }
-      }
-      return null;
-    };
-
-    const found = findNode(this.treeNodes);
-    if (found) {
-      this.selectedNode = found;
-      this.updateSelectedNodeDetails();
-    } else {
-      this.selectedNode = null;
-      this.selectedNodeDetails = null;
-    }
-  }
-
-  // Expand a node's parent path for better visibility
-  expandParentPath(node: TreeNode) {
-    const findAndExpandParent = (nodes: TreeNode[], targetKey: string|undefined): boolean => {
-      for (const node of nodes) {
-        if (node.children && node.children.length > 0) {
-          const hasTarget = node.children.some(child => child.key === targetKey);
-          if (hasTarget) {
-            node.expanded = true;
-            return true;
-          }
-          
-          const foundInChildren = findAndExpandParent(node.children, targetKey);
-          if (foundInChildren) {
-            node.expanded = true;
-            return true;
-          }
-        }
-      }
-      return false;
-    };
-    
-    if (node && this.treeNodes) {
-      findAndExpandParent(this.treeNodes, node.key);
-    }
-  }
-
-  // Add this method to expand the first level of nodes
-  expandFirstLevel() {
-    if (this.treeNodes && this.treeNodes.length > 0) {
-      // Expand the project node
-      this.treeNodes[0].expanded = true;
-      
-      // Expand the first 2-3 root nodes (if they exist)
-      if (this.treeNodes[0].children) {
-        const rootsToExpand = Math.min(3, this.treeNodes[0].children.length);
-        for (let i = 0; i < rootsToExpand; i++) {
-          this.treeNodes[0].children[i].expanded = true;
-          
-          // Also expand the first message of each expanded root
-          if (this.treeNodes[0]?.children?.[i]?.children?.length) {
-            this.treeNodes[0].children![i].children![0].expanded = true;
-          }
-        }
-        
-        // Force tree to update
-        this.treeNodes = [...this.treeNodes];
-      }
-    }
-  }
-  
-  // Also add a method to expand a node and its path when selected
-  onNodeSelect(event: any) {
-    // Expand the selected node
-    if (this.selectedNode) {
-      this.selectedNode.expanded = true;
-    }
-    
-    // Also expand the parent path
-    this.expandParentPath(this.selectedNode);
-    
-    // Update details
-    this.updateSelectedNodeDetails();
-  }
-
-  setActiveTab(tab: 'tree' | 'list') {
-    this.activeTab = tab;
-  }
-  
-  updateTreeNodes() {
-    if (!this.project) return;
+  buildTreeNodes(project: Project, roots: Root[]): TreeNode[] {
+    if (!project) return [];
 
     const projectNode: TreeNode = {
-      key: this.project.id,
-      label: this.project.name,
+      key: project.id,
+      label: project.name,
       type: 'project',
-      data: this.project,
+      data: project,
       icon: 'pi pi-folder-open',
       children: [],
       expanded: true // Always expand the project node
     };
 
-    if (this.roots && this.roots.length > 0) {
-      projectNode.children = this.roots.map(root => this.createRootNode(root));
-
-      // Expand at least the first root node for visibility
-      if (projectNode.children.length > 0) {
-        projectNode.children[0].expanded = true;
-      }
+    if (roots && roots.length > 0) {
+      projectNode.children = roots.map(root => this.createRootNode(root));
     }
 
-    this.treeNodes = [projectNode];
-
-    // If a node was selected, try to find it again after the tree updates
-    if (this.selectedNode) {
-      this.findAndSelectNode(this.selectedNode.key);
-    } else {
-      // Auto-select the project node if nothing is selected
-      this.selectedNode = projectNode;
-      this.updateSelectedNodeDetails();
-    }
+    return [projectNode];
   }
 
   createRootNode(root: Root): TreeNode {
@@ -357,156 +286,88 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
       default: return 'pi pi-tag';
     }
   }
-  
-  updateSelectedNodeDetails() {
-    if (!this.selectedNode) {
-      this.selectedNodeDetails = null;
-      return;
-    }
 
-    this.selectedNodeDetails = this.selectedNode.data;
-  }
-
-  // Get the header text for the selected node
-  getSelectedNodeHeader(): string {
-    if (!this.selectedNode) return '';
-
-    const type = this.selectedNode.type.charAt(0).toUpperCase() + this.selectedNode.type.slice(1);
-    return `${type} Details: ${this.selectedNode.label || ''}`;
-  }
-
-  // Get the properties to display for the selected node
-  getVisibleProperties(): { label: string, field: string, type: string }[] {
-    if (!this.selectedNodeDetails || !this.selectedNode) return [];
-
-    // Common properties
-    const properties = [
-      { label: 'Name', field: 'name', type: 'string' },
-      { label: 'Description', field: 'description', type: 'string' },
-      { label: 'Created Date', field: 'createdDate', type: 'date' },
-      { label: 'Last Modified Date', field: 'lastModifiedDate', type: 'date' }
-    ];
-
-    // Type-specific properties
-    switch (this.selectedNode.type) {
-      case 'project':
-        properties.push({ label: 'Roots Count', field: 'roots', type: 'count' });
-        break;
-      case 'root':
-        properties.push({ label: 'Messages Count', field: 'messages', type: 'count' });
-        break;
-      case 'message':
-        properties.push({ label: 'Fields Count', field: 'fields', type: 'count' });
-        break;
-      case 'field':
-        properties.push({ label: 'Type', field: 'type', type: 'string' });
-        properties.push({ label: 'Required', field: 'isRequired', type: 'boolean' });
-        if (this.selectedNodeDetails.type === 'Complex') {
-          properties.push({ label: 'Child Fields', field: 'childFields', type: 'count' });
-        }
-        if (this.selectedNodeDetails.type === 'Enum') {
-          properties.push({ label: 'Enum Values', field: 'enumValues', type: 'count' });
-        }
-        if (this.selectedNodeDetails.defaultValue) {
-          properties.push({ label: 'Default Value', field: 'defaultValue', type: 'string' });
-        }
-        break;
-    }
-
-    return properties;
-  }
-
-  // Navigate to the details view for the selected node
-  viewNodeDetails() {
-    if (!this.selectedNode) return;
-
-    switch (this.selectedNode.type) {
-      case 'project':
-        // Already on project details page
-        break;
-      case 'root':
-        this.router.navigate(['/roots', this.selectedNode.key]);
-        break;
-      case 'message':
-        this.router.navigate(['/messages', this.selectedNode.key]);
-        break;
-      case 'field':
-        this.router.navigate(['/fields', this.selectedNode.key]);
-        break;
-    }
-  }
-
-  // Edit the selected node
-  editSelectedNode() {
-    if (!this.selectedNode) return;
-
-    switch (this.selectedNode.type) {
-      case 'project':
-        // Edit project logic
-        break;
-      case 'root':
-        this.showEditRootDialog(this.selectedNode.data as Root);
-        break;
-      case 'message':
-        // Navigate to message edit page
-        this.router.navigate(['/messages', this.selectedNode.key], { queryParams: { edit: true } });
-        break;
-      case 'field':
-        // Navigate to field edit page
-        this.router.navigate(['/fields', this.selectedNode.key], { queryParams: { edit: true } });
-        break;
-    }
-  }
-
-  // Delete the selected node
-  deleteSelectedNode() {
-    if (!this.selectedNode) return;
-
-    const name = this.selectedNode.label || '';
-    const type = this.selectedNode.type;
-
-    this.confirmationService.confirm({
-      message: `Are you sure you want to delete the ${type} "${name}"?`,
-      header: 'Confirm Delete',
-      icon: 'pi pi-exclamation-triangle',
-      acceptButtonStyleClass: 'p-button-danger',
-      accept: () => {
-        switch (type) {
-          case 'root':
-            this.store.dispatch(deleteRoot({ id: this.selectedNode!.key }));
-            break;
-          // Add other entity type deletions when implemented
-        }
-
-        this.selectedNode = null;
-        this.selectedNodeDetails = null;
-        this.messageService.add({ severity: 'success', summary: 'Success', detail: `${type} deleted successfully` });
-      }
-    });
-  }
-
-  // Export the selected node to XML
-  exportSelectedNode() {
-    if (!this.selectedNode) return;
-
-    switch (this.selectedNode.type) {
-      case 'root':
-        this.store.dispatch(exportRoot({ id: this.selectedNode.key }));
-
-        // Subscribe to the exported XML
-        this.store.select(state => state.roots.exportedXml).pipe(
-          takeUntil(this.destroy$)
-        ).subscribe(xml => {
-          if (xml) {
-            this.exportedXml = xml;
-            this.exportDialogVisible = true;
+  // Expand the first level of nodes (called from subscription)
+  expandFirstLevel(treeNodes: TreeNode[]) {
+    if (treeNodes && treeNodes.length > 0) {
+      // Create a deep copy of the nodes to modify
+      const expandedNodes = JSON.parse(JSON.stringify(treeNodes));
+      
+      // Project node is already expanded by default
+      
+      // Expand the first 2-3 root nodes (if they exist)
+      if (expandedNodes[0].children) {
+        const rootsToExpand = Math.min(3, expandedNodes[0].children.length);
+        for (let i = 0; i < rootsToExpand; i++) {
+          expandedNodes[0].children[i].expanded = true;
+          
+          // Also expand the first message of each expanded root
+          if (expandedNodes[0]?.children?.[i]?.children?.length) {
+            expandedNodes[0].children[i].children[0].expanded = true;
           }
-        });
-        break;
-      // Add other entity type exports when implemented
+        }
+      }
+      
+      // Update the observable with the expanded nodes
+      this.treeNodes$ = of(expandedNodes);
     }
   }
 
+  // Handle node selection
+  onNodeSelect(event: any) {
+    // Update selected node
+    this.selectedNode$.next(event.node);
+    
+    // Expand the selected node
+    if (event.node) {
+      // We'll need to get the current value of treeNodes$ to expand the parent path
+      this.treeNodes$.pipe(
+        take(1) // Take only the current value
+      ).subscribe(nodes => {
+        // Expand the parent path with the current nodes
+        this.expandParentPath(event.node, nodes);
+      });
+    }
+  }
+
+  // Find and expand parent nodes
+  expandParentPath(node: TreeNode, treeNodes: TreeNode[]) {
+    // Create a deep copy to avoid modifying the original data
+    const expandedNodes = JSON.parse(JSON.stringify(treeNodes));
+    
+    const findAndExpandParent = (nodes: TreeNode[], targetKey: string|undefined): boolean => {
+      for (const node of nodes) {
+        if (node.children && node.children.length > 0) {
+          const hasTarget = node.children.some(child => child.key === targetKey);
+          if (hasTarget) {
+            node.expanded = true;
+            return true;
+          }
+          
+          const foundInChildren = findAndExpandParent(node.children, targetKey);
+          if (foundInChildren) {
+            node.expanded = true;
+            return true;
+          }
+        }
+      }
+      return false;
+    };
+    
+    if (node && expandedNodes) {
+      findAndExpandParent(expandedNodes, node.key);
+      
+      // Update the observable with the expanded nodes
+      this.treeNodes$ = of(expandedNodes);
+    }
+  }
+
+  // Set active tab (tree or list view)
+  setActiveTab(tab: 'tree' | 'list') {
+    this.activeTab$.next(tab);
+  }
+
+  // Show dialog to create new root
   showCreateRootDialog() {
     this.editingRoot = {};
     this.rootDialogHeader = 'Create New Root';
@@ -514,6 +375,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     this.rootDialogVisible = true;
   }
 
+  // Show dialog to edit existing root
   showEditRootDialog(root: Root) {
     this.editingRoot = { ...root };
     this.rootDialogHeader = 'Edit Root';
@@ -521,6 +383,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     this.rootDialogVisible = true;
   }
 
+  // Save root (create or update)
   saveRoot() {
     if (this.isEditingRoot) {
       const root = this.editingRoot as Root;
@@ -542,6 +405,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     this.rootDialogVisible = false;
   }
 
+  // Confirm deletion of a root
   confirmDeleteRoot(root: Root) {
     this.confirmationService.confirm({
       message: `Are you sure you want to delete the root "${root.name}"?`,
@@ -560,22 +424,15 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     });
   }
 
+  // Export all roots
   exportAllRoots() {
     if (!this.projectId) return;
 
     this.store.dispatch(exportAllRoots({ projectId: this.projectId }));
-
-    // Subscribe to the exported XML
-    this.store.select(state => state.roots.exportedXml).pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(xml => {
-      if (xml) {
-        this.exportedXml = xml;
-        this.exportDialogVisible = true;
-      }
-    });
+    this.exportDialogVisible = true;
   }
 
+  // Copy exported XML to clipboard
   copyToClipboard(text: string) {
     navigator.clipboard.writeText(text).then(
       () => {
@@ -598,35 +455,33 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     );
   }
 
+  // Handle search input
   onSearch(event: any) {
-    const term = event.target.value;
-    if (term && term.length > 0) {
-      // Filter the tree nodes based on the search term
-      this.filterTreeNodes(term);
-    } else {
-      // Reset the tree
-      this.updateTreeNodes();
-    }
+    const term = typeof event === 'string' ? event : event.target.value;
+    this.searchTerm$.next(term);
   }
 
+  // Clear search
   onClearSearch() {
-    this.searchTerm = '';
-    this.updateTreeNodes();
+    this.searchTerm$.next('');
   }
 
   // Filter tree nodes based on search term
-  filterTreeNodes(term: string) {
-    // Reset tree with all nodes
-    this.updateTreeNodes();
+  filterTreeNodes(term: string, originalNodes: TreeNode[]) {
+    if (!term || !originalNodes.length) return;
 
-    if (!term || !this.treeNodes.length) return;
-
+    // We need to handle filtering differently with observables
+    // Since we don't want to mutate the original data in the store
+    
+    // Make a deep copy of the original nodes to work with
+    const nodesCopy = JSON.parse(JSON.stringify(originalNodes));
+    
     const filterNode = (node: TreeNode): boolean => {
       // Check if the current node matches
       const nodeLabel = node.label?.toLowerCase() || '';
       const nodeDescription = (node.data?.description || '').toLowerCase();
       const matches = nodeLabel.includes(term.toLowerCase()) || 
-                      nodeDescription.includes(term.toLowerCase());
+                    nodeDescription.includes(term.toLowerCase());
 
       // Check if any children match
       let childrenMatch = false;
@@ -650,6 +505,140 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     };
 
     // Apply filter to the root nodes
-    this.treeNodes = this.treeNodes.filter(filterNode);
+    const filteredNodes = nodesCopy.filter(filterNode);
+    
+    // Since we can't directly update the observable, we create a new
+    // treeNodes$ observable with our filtered data
+    this.treeNodes$ = of(filteredNodes);
+  }
+
+  // Function to get header text for selected node
+  getSelectedNodeHeader(node: any): string {
+    if (!node) return '';
+
+    const type = node.type.charAt(0).toUpperCase() + node.type.slice(1);
+    return `${type} Details: ${node.label || ''}`;
+  }
+
+  // Function to get properties to display for the selected node
+  getVisibleProperties(nodeDetails: any, nodeType: string): { label: string, field: string, type: string }[] {
+    if (!nodeDetails) return [];
+
+    // Common properties
+    const properties = [
+      { label: 'Name', field: 'name', type: 'string' },
+      { label: 'Description', field: 'description', type: 'string' },
+      { label: 'Created Date', field: 'createdDate', type: 'date' },
+      { label: 'Last Modified Date', field: 'lastModifiedDate', type: 'date' }
+    ];
+
+    // Type-specific properties
+    switch (nodeType) {
+      case 'project':
+        properties.push({ label: 'Roots Count', field: 'roots', type: 'count' });
+        break;
+      case 'root':
+        properties.push({ label: 'Messages Count', field: 'messages', type: 'count' });
+        break;
+      case 'message':
+        properties.push({ label: 'Fields Count', field: 'fields', type: 'count' });
+        break;
+      case 'field':
+        properties.push({ label: 'Type', field: 'type', type: 'string' });
+        properties.push({ label: 'Required', field: 'isRequired', type: 'boolean' });
+        if (nodeDetails.type === 'Complex') {
+          properties.push({ label: 'Child Fields', field: 'childFields', type: 'count' });
+        }
+        if (nodeDetails.type === 'Enum') {
+          properties.push({ label: 'Enum Values', field: 'enumValues', type: 'count' });
+        }
+        if (nodeDetails.defaultValue) {
+          properties.push({ label: 'Default Value', field: 'defaultValue', type: 'string' });
+        }
+        break;
+    }
+
+    return properties;
+  }
+
+  // Navigate to details view for selected node
+  viewNodeDetails(node: any) {
+    if (!node) return;
+
+    switch (node.type) {
+      case 'project':
+        // Already on project details page
+        break;
+      case 'root':
+        this.router.navigate(['/roots', node.key]);
+        break;
+      case 'message':
+        this.router.navigate(['/messages', node.key]);
+        break;
+      case 'field':
+        this.router.navigate(['/fields', node.key]);
+        break;
+    }
+  }
+
+  // Edit selected node
+  editSelectedNode(node: any) {
+    if (!node) return;
+
+    switch (node.type) {
+      case 'project':
+        // Edit project logic
+        break;
+      case 'root':
+        this.showEditRootDialog(node.data as Root);
+        break;
+      case 'message':
+        // Navigate to message edit page
+        this.router.navigate(['/messages', node.key], { queryParams: { edit: true } });
+        break;
+      case 'field':
+        // Navigate to field edit page
+        this.router.navigate(['/fields', node.key], { queryParams: { edit: true } });
+        break;
+    }
+  }
+
+  // Delete selected node
+  deleteSelectedNode(node: any) {
+    if (!node) return;
+
+    const name = node.label || '';
+    const type = node.type;
+
+    this.confirmationService.confirm({
+      message: `Are you sure you want to delete the ${type} "${name}"?`,
+      header: 'Confirm Delete',
+      icon: 'pi pi-exclamation-triangle',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => {
+        switch (type) {
+          case 'root':
+            this.store.dispatch(deleteRoot({ id: node.key }));
+            break;
+          // Add other entity type deletions when implemented
+        }
+
+        this.selectedNode$.next(null);
+        this.messageService.add({ severity: 'success', summary: 'Success', detail: `${type} deleted successfully` });
+      }
+    });
+  }
+
+  // Export selected node to XML
+  exportSelectedNode(node: any) {
+    if (!node) return;
+
+    switch (node.type) {
+      case 'root':
+        this.store.dispatch(exportRoot({ id: node.key }));
+        this.exportDialogVisible = true;
+        break;
+      // Add other entity type exports when implemented
+    }
   }
 }

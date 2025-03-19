@@ -1,7 +1,7 @@
 <div class="project-container" @fadeIn>
   <!-- Breadcrumb navigation -->
   <div class="breadcrumb-container">
-    <ng-container *ngFor="let crumb of breadcrumbs; let last = last; let i = index">
+    <ng-container *ngFor="let crumb of breadcrumbs$ | async; let last = last; let i = index">
       <div class="breadcrumb-item">
         <a 
           [routerLink]="crumb.routerLink" 
@@ -19,7 +19,7 @@
   <!-- Main header with search and actions -->
   <div class="project-header" @slideIn>
     <div class="header-left">
-      <h1 class="project-title">{{ project?.name || 'Project Details' }}</h1>
+      <h1 class="project-title">{{ (project$ | async)?.name || 'Project Details' }}</h1>
     </div>
     <div class="header-right">
       <div class="search-container">
@@ -28,14 +28,14 @@
           <input 
             type="text" 
             pInputText 
-            [(ngModel)]="searchTerm" 
+            [ngModel]="searchTerm$ | async" 
             (input)="onSearch($event)" 
             placeholder="Search by name, description, etc."
             class="search-input"
           />
         </span>
         <button 
-          *ngIf="searchTerm" 
+          *ngIf="searchTerm$ | async" 
           pButton 
           pRipple 
           type="button" 
@@ -63,7 +63,7 @@
         icon="pi pi-download" 
         class="p-button-primary action-button" 
         (click)="exportAllRoots()"
-        [disabled]="!roots.length"
+        [disabled]="!(roots$ | async)?.length"
         pTooltip="Export all roots"
       ></button>
     </div>
@@ -74,7 +74,7 @@
     <ul class="tab-nav">
       <li 
         class="tab-item" 
-        [class.active]="activeTab === 'tree'" 
+        [class.active]="(activeTab$ | async) === 'tree'" 
         (click)="setActiveTab('tree')"
       >
         <i class="pi pi-sitemap"></i>
@@ -82,7 +82,7 @@
       </li>
       <li 
         class="tab-item" 
-        [class.active]="activeTab === 'list'" 
+        [class.active]="(activeTab$ | async) === 'list'" 
         (click)="setActiveTab('list')"
       >
         <i class="pi pi-list"></i>
@@ -94,13 +94,13 @@
   <!-- Tab content -->
   <div class="tab-content" @staggerIn>
     <!-- Tree View -->
-    <div *ngIf="activeTab === 'tree'" class="tree-view-container">
+    <div *ngIf="(activeTab$ | async) === 'tree'" class="tree-view-container">
       <div class="tree-layout">
         <div class="tree-sidebar stagger-item">
           <p-tree 
-            [value]="treeNodes" 
+            [value]="treeNodes$ | async" 
             selectionMode="single" 
-            [(selection)]="selectedNode"
+            [(selection)]="selectedNode$.value"
             (onNodeSelect)="onNodeSelect($event)"
             [filter]="true"
             [filterMode]="'lenient'"
@@ -116,14 +116,14 @@
         </div>
         
         <div class="tree-details stagger-item">
-          <ng-container *ngIf="selectedNode">
+          <ng-container *ngIf="selectedNode$ | async as selectedNode">
             <div class="details-card">
               <div class="details-header">
-                <h2 class="details-title">{{ getSelectedNodeHeader() }}</h2>
+                <h2 class="details-title">{{ getSelectedNodeHeader(selectedNode) }}</h2>
               </div>
               
-              <div class="details-content" *ngIf="selectedNodeDetails">
-                <div class="details-property" *ngFor="let prop of getVisibleProperties()">
+              <div class="details-content" *ngIf="selectedNodeDetails$ | async as selectedNodeDetails">
+                <div class="details-property" *ngFor="let prop of getVisibleProperties(selectedNodeDetails, selectedNode.type)">
                   <div class="property-label">{{ prop.label }}:</div>
                   <div class="property-value">
                     <ng-container [ngSwitch]="prop.type">
@@ -144,7 +144,7 @@
                   icon="pi pi-eye" 
                   label="View Details" 
                   class="p-button-info action-btn"
-                  (click)="viewNodeDetails()"
+                  (click)="viewNodeDetails(selectedNode)"
                 ></button>
                 <button 
                   pButton 
@@ -153,7 +153,7 @@
                   icon="pi pi-pencil" 
                   label="Edit" 
                   class="p-button-success action-btn" 
-                  (click)="editSelectedNode()"
+                  (click)="editSelectedNode(selectedNode)"
                 ></button>
                 <button 
                   pButton 
@@ -162,7 +162,7 @@
                   icon="pi pi-trash" 
                   label="Delete" 
                   class="p-button-danger action-btn" 
-                  (click)="deleteSelectedNode()"
+                  (click)="deleteSelectedNode(selectedNode)"
                 ></button>
                 <button 
                   pButton 
@@ -171,14 +171,14 @@
                   icon="pi pi-download" 
                   label="Export" 
                   class="p-button-secondary action-btn" 
-                  (click)="exportSelectedNode()"
+                  (click)="exportSelectedNode(selectedNode)"
                   *ngIf="selectedNode.type !== 'project'"
                 ></button>
               </div>
             </div>
           </ng-container>
           
-          <div *ngIf="!selectedNode" class="no-selection stagger-item">
+          <div *ngIf="!(selectedNode$ | async)" class="no-selection stagger-item">
             <div class="selection-hint">
               <i class="pi pi-arrow-left hint-icon"></i>
               <p class="hint-text">Select an item from the tree to view details</p>
@@ -189,9 +189,9 @@
     </div>
     
     <!-- Roots List -->
-    <div *ngIf="activeTab === 'list'" class="roots-list-container stagger-item">
+    <div *ngIf="(activeTab$ | async) === 'list'" class="roots-list-container stagger-item">
       <p-table 
-        [value]="roots" 
+        [value]="(roots$ | async) ?? []" 
         styleClass="custom-table"
         [paginator]="true" 
         [rows]="10" 
@@ -348,19 +348,21 @@
   styleClass="custom-dialog export-dialog"
 >
   <div class="export-content">
-    <pre class="export-code">{{ exportedXml }}</pre>
+    <pre class="export-code">{{ exportedXml$ | async }}</pre>
   </div>
   
   <ng-template pTemplate="footer">
-    <button 
-      pButton 
-      pRipple 
-      type="button" 
-      label="Copy" 
-      icon="pi pi-copy" 
-      class="p-button-primary" 
-      (click)="copyToClipboard(exportedXml)"
-    ></button>
+    <ng-container *ngIf="exportedXml$ | async as exportedXml">
+      <button 
+        pButton 
+        pRipple 
+        type="button" 
+        label="Copy" 
+        icon="pi pi-copy" 
+        class="p-button-primary" 
+        (click)="copyToClipboard(exportedXml)"
+      ></button>
+    </ng-container>
     <button 
       pButton 
       pRipple 

@@ -4,6 +4,8 @@ import { of } from 'rxjs';
 import { catchError, filter, map, mergeMap, switchMap, tap } from 'rxjs/operators';
 import { ProjectService } from '../../services/project.service';
 import { loadProjects, loadProjectsSuccess, loadProjectsFailure, createProject, createProjectFailure, createProjectSuccess, deleteProject, deleteProjectFailure, deleteProjectSuccess, loadProject, loadProjectFailure, loadProjectSuccess, searchProjects, searchProjectsFailure, searchProjectsSuccess, updateProject, updateProjectFailure, updateProjectSuccess } from './project.actions';
+import { loadRootsByProjectSuccess } from '../root/root.actions';
+import { Store } from '@ngrx/store';
 
 
 
@@ -11,37 +13,39 @@ import { loadProjects, loadProjectsSuccess, loadProjectsFailure, createProject, 
 export class ProjectEffects {
   private actions$ = inject(Actions);
   private projectService = inject(ProjectService);
+  private store = inject(Store);
 
   constructor() {
-      }
-//   allActions$ = createEffect(() => this.actions$.pipe(
-//     tap(action => console.log('Action in system:', action.type)),
-//     map(() => ({ type: '[Debug] Action Logged' }))
-//   ));
-//   // Add this to your ProjectEffects class
-//   debugEffect$ = createEffect(() => this.actions$.pipe(
-//     tap(action => console.log('Action received in effects:', action.type)),
-//     map(() => ({ type: '[Debug] Action Logged' }))
-//   ));
-loadProjects$ = createEffect(() => this.actions$?.pipe(
-  tap(() => console.log('Loading projects...2')),
-  ofType(loadProjects),
-  switchMap(() => this.projectService.getProjects().pipe(
-    map(projects => loadProjectsSuccess({ projects })),
-    catchError(error => of(loadProjectsFailure({ error })))
-  ))
-));
+  }
+  //   allActions$ = createEffect(() => this.actions$.pipe(
+  //     tap(action => console.log('Action in system:', action.type)),
+  //     map(() => ({ type: '[Debug] Action Logged' }))
+  //   ));
+  //   // Add this to your ProjectEffects class
+  //   debugEffect$ = createEffect(() => this.actions$.pipe(
+  //     tap(action => console.log('Action received in effects:', action.type)),
+  //     map(() => ({ type: '[Debug] Action Logged' }))
+  //   ));
+  loadProjects$ = createEffect(() => this.actions$?.pipe(
+    tap(() => console.log('Loading projects...2')),
+    ofType(loadProjects),
+    switchMap(() => this.projectService.getProjects().pipe(
+      map(projects => loadProjectsSuccess({ projects })),
+      catchError(error => of(loadProjectsFailure({ error })))
+    ))
+  ));
 
   loadProject$ = createEffect(() => this.actions$.pipe(
     ofType(loadProject),
-    tap(({ id }) => console.log(`ProjectEffects: loadProject action received for id ${id}`)),
     switchMap(({ id }) => this.projectService.getProject(id).pipe(
-      tap(project => console.log(`ProjectEffects: Project ${id} loaded successfully`, project)),
-      map(project => loadProjectSuccess({ project })),
-      catchError(error => {
-        console.error(`ProjectEffects: Error loading project ${id}`, error);
-        return of(loadProjectFailure({ error }));
-      })
+      map(project => {
+        // Dispatch loadRootsByProjectSuccess with the project's roots
+        if (project && project.roots) {
+          this.store.dispatch(loadRootsByProjectSuccess({ roots: project.roots }));
+        }
+        return loadProjectSuccess({ project });
+      }),
+      catchError(error => of(loadProjectFailure({ error })))
     ))
   ));
 
