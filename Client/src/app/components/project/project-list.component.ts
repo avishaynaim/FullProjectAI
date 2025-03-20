@@ -1,7 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { AppState } from '../../store/app.state';
 import { selectAllProjects, selectProjectsLoading } from '../../store/project/project.selectors';
@@ -16,6 +16,9 @@ import { ToastModule } from 'primeng/toast';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { SearchBoxComponent } from '../shared/search-box/search-box.component';
 import { loadProjects, updateProject, createProject, deleteProject, searchProjects } from '../../store/project/project.actions';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { InputTextModule } from 'primeng/inputtext';
+
 
 @Component({
   selector: 'app-project-list',
@@ -30,8 +33,9 @@ import { loadProjects, updateProject, createProject, deleteProject, searchProjec
     ToolbarModule,
     ConfirmDialogModule,
     SearchBoxComponent,
-    FormsModule,
-    SearchBoxComponent
+    ReactiveFormsModule,
+    InputTextModule,
+    ToastModule
   ],
   providers: [MessageService, ConfirmationService],
   template: `
@@ -57,8 +61,8 @@ import { loadProjects, updateProject, createProject, deleteProject, searchProjec
       </p-toolbar>
       
       <p-table 
-        [value]="projects" 
-        [loading]="loading" 
+        [value]="projects()" 
+        [loading]="loading()" 
         styleClass="p-datatable-sm p-datatable-gridlines mt-2"
         [paginator]="true" 
         [rows]="10" 
@@ -122,81 +126,89 @@ import { loadProjects, updateProject, createProject, deleteProject, searchProjec
     </div>
     
     <p-dialog 
-      [(visible)]="dialogVisible" 
-      [header]="dialogHeader"
+[visible]="dialogVisible()" (visibleChange)="dialogVisible.set($event)"
+      [header]="dialogHeader()"
       [modal]="true" 
       [draggable]="false" 
       [resizable]="false"
       [style]="{width: '500px'}"
+      (onHide)="onDialogHide()"
     >
-      <ng-container *ngIf="dialogVisible">
+      <ng-container *ngIf="dialogVisible()">
         <div class="p-fluid">
-          <div class="field">
-            <label for="name" class="font-bold">Name</label>
-            <input 
-              id="name" 
-              type="text" 
-              pInputText 
-              [(ngModel)]="editingProject.name"
-              class="w-full" 
-            />
-          </div>
-          
-          <div class="field">
-            <label for="description" class="font-bold">Description</label>
-            <textarea 
-              id="description"
-              pInputTextarea
-              [(ngModel)]="editingProject.description"
-              rows="3"
-              class="w-full"
-            ></textarea>
-          </div>
-          
-          <div class="flex justify-content-end gap-2 mt-4">
-            <button 
-              pButton 
-              type="button" 
-              label="Cancel" 
-              class="p-button-outlined" 
-              (click)="dialogVisible = false"
-            ></button>
-            <button 
-              pButton 
-              type="button" 
-              label="Save" 
-              (click)="saveProject()"
-            ></button>
-          </div>
+          <form [formGroup]="projectForm">
+            <div class="field">
+              <label for="name" class="font-bold">Name</label>
+              <input 
+                id="name" 
+                type="text" 
+                pInputText 
+                formControlName="name"
+                class="w-full" 
+              />
+            </div>
+            
+            <div class="field">
+              <label for="description" class="font-bold">Description</label>
+              <textarea 
+                id="description"
+                pInputTextarea
+                formControlName="description"
+                rows="3"
+                class="w-full"
+              ></textarea>
+            </div>
+            
+            <div class="flex justify-content-end gap-2 mt-4">
+              <button 
+                pButton 
+                type="button" 
+                label="Cancel" 
+                class="p-button-outlined" 
+                (click)="closeDialog()"
+              ></button>
+              <button 
+                pButton 
+                type="button" 
+                label="Save" 
+                [disabled]="projectForm.invalid"
+                (click)="saveProject()"
+              ></button>
+            </div>
+          </form>
         </div>
       </ng-container>
     </p-dialog>
+    
+    <p-confirmDialog></p-confirmDialog>
+    <p-toast></p-toast>
   `
 })
 export class ProjectListComponent implements OnInit {
-  projects: Project[] = [];
-  loading = false;
-  dialogVisible = false;
-  dialogHeader = '';
-  editingProject: Partial<Project> = {};
-  isEditing = false;
+  // Services
+  private store = inject(Store<AppState>);
+  private confirmationService = inject(ConfirmationService);
+  private messageService = inject(MessageService);
+  private fb = inject(FormBuilder);
 
-  constructor(
-    private store: Store<AppState>,
-    private confirmationService: ConfirmationService,
-    private messageService: MessageService
-  ) {}
+  // Signals from store selectors
+  projects = toSignal(this.store.select(selectAllProjects), { initialValue: [] });
+  loading = toSignal(this.store.select(selectProjectsLoading), { initialValue: false });
+
+  // UI state signals
+  dialogVisible = signal(false);
+  dialogHeader = signal('');
+  isEditing = signal(false);
+  currentProjectId = signal<string | null>(null);
+
+  // Form
+  projectForm: FormGroup = this.fb.group({
+    name: ['', [Validators.required, Validators.minLength(3)]],
+    description: ['']
+  });
 
   ngOnInit() {
     this.loadProjects();
-    
-    this.store.select(selectAllProjects).subscribe(projects => {
-      this.projects = projects;
-    });
-    
-    this.store.select(selectProjectsLoading).subscribe(loading => {
-      this.loading = loading;
-    });
   }
 
   loadProjects() {
@@ -204,37 +216,57 @@ export class ProjectListComponent implements OnInit {
   }
 
   showCreateDialog() {
-    this.editingProject = {};
-    this.dialogHeader = 'Create New Project';
-    this.isEditing = false;
-    this.dialogVisible = true;
+    this.projectForm.reset();
+    this.dialogHeader.set('Create New Project');
+    this.isEditing.set(false);
+    this.currentProjectId.set(null);
+    this.dialogVisible.set(true);
   }
 
   showEditDialog(project: Project) {
-    this.editingProject = { ...project };
-    this.dialogHeader = 'Edit Project';
-    this.isEditing = true;
-    this.dialogVisible = true;
+    this.projectForm.setValue({
+      name: project.name,
+      description: project.description || ''
+    });
+    this.dialogHeader.set('Edit Project');
+    this.isEditing.set(true);
+    this.currentProjectId.set(project.id);
+    this.dialogVisible.set(true);
   }
 
   saveProject() {
-    if (this.isEditing) {
-      const project = this.editingProject as Project;
+    if (this.projectForm.invalid) return;
+
+    const formValues = this.projectForm.value;
+
+    if (this.isEditing()) {
+      const project: Project = {
+        id: this.currentProjectId() as string,
+        name: formValues.name,
+        description: formValues.description,
+        lastModifiedDate: new Date(),
+        // Preserve these fields from the existing project
+        createdDate: this.projects().find(p => p.id === this.currentProjectId())?.createdDate || new Date(),
+        roots: this.projects().find(p => p.id === this.currentProjectId())?.roots || []
+      };
+
       this.store.dispatch(updateProject({ project }));
       this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Project updated successfully' });
     } else {
       const newProject: Project = {
-        id: '',
-        name: this.editingProject.name || '',
-        description: this.editingProject.description || '',
+        id: '', // ID will be generated by the backend
+        name: formValues.name,
+        description: formValues.description,
         createdDate: new Date(),
         lastModifiedDate: new Date(),
         roots: []
       };
+
       this.store.dispatch(createProject({ project: newProject }));
       this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Project created successfully' });
     }
-    this.dialogVisible = false;
+
+    this.closeDialog();
   }
 
   confirmDelete(project: Project) {
@@ -259,5 +291,14 @@ export class ProjectListComponent implements OnInit {
 
   onClearSearch() {
     this.loadProjects();
+  }
+
+  closeDialog() {
+    this.dialogVisible.set(false);
+  }
+
+  onDialogHide() {
+    this.projectForm.reset();
+    this.currentProjectId.set(null);
   }
 }

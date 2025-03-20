@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -15,6 +15,7 @@ import { selectAllProjects } from '../../store/project/project.selectors';
 import { Project } from '../../models/project.model';
 import { loadProjects } from '../../store/project/project.actions';
 import { trigger, transition, style, animate } from '@angular/animations';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-login',
@@ -55,7 +56,7 @@ import { trigger, transition, style, animate } from '@angular/animations';
           <h1 class="login-title">Login to Dashboard</h1>
         </div>
         
-        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form-container">
+        <form [formGroup]="loginForm()" (ngSubmit)="onSubmit()" class="login-form-container">
           <div class="form-group">
             <label for="username">Username</label>
             <div class="p-input-icon-left">
@@ -70,7 +71,7 @@ import { trigger, transition, style, animate } from '@angular/animations';
               />
             </div>
             <small 
-              *ngIf="f['username'].invalid && f['username'].touched"
+              *ngIf="f()['username'].invalid && f()['username'].touched"
               class="error-message"
             >
               Username is required
@@ -92,7 +93,7 @@ import { trigger, transition, style, animate } from '@angular/animations';
               ></p-password>
             </div>
             <small 
-              *ngIf="f['password'].invalid && f['password'].touched"
+              *ngIf="f()['password'].invalid && f()['password'].touched"
               class="error-message"
             >
               Password is required
@@ -104,7 +105,7 @@ import { trigger, transition, style, animate } from '@angular/animations';
             <p-dropdown 
               id="project" 
               formControlName="project" 
-              [options]="projects" 
+              [options]="projects()" 
               optionLabel="name" 
               placeholder="Choose a project" 
               [showClear]="true"
@@ -113,7 +114,7 @@ import { trigger, transition, style, animate } from '@angular/animations';
               filterBy="name"
             ></p-dropdown>
             <small 
-              *ngIf="f['project'].invalid && f['project'].touched"
+              *ngIf="f()['project'].invalid && f()['project'].touched"
               class="error-message"
             >
               Project selection is required
@@ -432,15 +433,26 @@ import { trigger, transition, style, animate } from '@angular/animations';
   `]
 })
 export class LoginComponent implements OnInit {
-  loginForm!: FormGroup;
-  projects: Project[] = [];
+  private fb = inject(FormBuilder);
+  private router = inject(Router);
+  private store = inject(Store<AppState>);
 
-  constructor(
-    private fb: FormBuilder,
-    private router: Router,
-    private store: Store<AppState>
-  ) {
-    this.loginForm = this.fb.group({
+  // Form signal
+  loginForm = signal<FormGroup>(this.createForm());
+  
+  // Convert the store's selectAllProjects into a signal
+  projects = toSignal(this.store.select(selectAllProjects), { initialValue: [] as Project[] });
+  
+  // Computed control accessor
+  f = computed(() => this.loginForm().controls);
+
+  ngOnInit() {
+    // Load projects for dropdown
+    this.store.dispatch(loadProjects());
+  }
+
+  private createForm(): FormGroup {
+    return this.fb.group({
       username: ['', Validators.required],
       password: ['', Validators.required],
       project: [null, Validators.required],
@@ -448,27 +460,14 @@ export class LoginComponent implements OnInit {
     });
   }
 
-  ngOnInit() {
-    // Load projects for dropdown
-    this.store.dispatch(loadProjects());
-
-    this.store.select(selectAllProjects).subscribe(projects => {
-      this.projects = projects;
-    });
-  }
-
-  get f() {
-    return this.loginForm.controls;
-  }
-
   onSubmit() {
     // Mark all fields as touched to trigger validation display
-    Object.keys(this.loginForm.controls).forEach(key => {
-      this.loginForm.get(key)?.markAsTouched();
+    Object.keys(this.loginForm().controls).forEach(key => {
+      this.loginForm().get(key)?.markAsTouched();
     });
 
-    if (this.loginForm.valid) {
-      const selectedProject = this.loginForm.get('project')?.value;
+    if (this.loginForm().valid) {
+      const selectedProject = this.loginForm().get('project')?.value;
 
       if (selectedProject) {
         // Navigate to the selected project

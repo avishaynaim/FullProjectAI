@@ -1,6 +1,6 @@
-import { Project } from "../components/project/project.model";
 import { Field } from "./field.model";
 import { Message } from "./message.model";
+import { Project } from "./project.model";
 import { Root } from "./root.model";
 
 export interface TreeNode {

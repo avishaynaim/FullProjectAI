@@ -1,9 +1,8 @@
 // src/app/components/message/message-detail.component.ts
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, effect, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { Subject, takeUntil } from 'rxjs';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { CardModule } from 'primeng/card';
 import { TabViewModule } from 'primeng/tabview';
@@ -28,7 +27,10 @@ import { MessageFormComponent } from '../message/message-components';
 import { FieldFormComponent } from '../field/field-components';
 import { FormsModule } from '@angular/forms';
 import { updateField, createField, deleteField } from '../../store/field/field.actions';
-import { exportMessage, loadMessage } from '../../store/message/message.actions';
+import { exportMessage, loadMessage, updateMessage } from '../../store/message/message.actions';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Observable, filter, map } from 'rxjs';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-message-detail',
@@ -54,12 +56,12 @@ import { exportMessage, loadMessage } from '../../store/message/message.actions'
   template: `
     <div class="card">
       <div class="mb-4">
-        <app-breadcrumb [breadcrumbs]="breadcrumbs"></app-breadcrumb>
+        <app-breadcrumb [breadcrumbs]="breadcrumbs()"></app-breadcrumb>
       </div>
       
       <p-toolbar>
         <div class="p-toolbar-group-start">
-          <h1 class="text-2xl font-bold m-0" *ngIf="message">{{ message.name }}</h1>
+          <h1 class="text-2xl font-bold m-0" *ngIf="message()">{{ message()?.name }}</h1>
         </div>
         <div class="p-toolbar-group-end">
           <app-search-box 
@@ -90,19 +92,19 @@ import { exportMessage, loadMessage } from '../../store/message/message.actions'
           <p-card header="Message Information" styleClass="h-full">
             <div class="grid">
               <div class="col-4 font-bold">Name:</div>
-              <div class="col-8">{{ message?.name }}</div>
+              <div class="col-8">{{ message()?.name }}</div>
               
               <div class="col-4 font-bold">Description:</div>
-              <div class="col-8">{{ message?.description }}</div>
+              <div class="col-8">{{ message()?.description }}</div>
               
               <div class="col-4 font-bold">Created:</div>
-              <div class="col-8">{{ message?.createdDate | date }}</div>
+              <div class="col-8">{{ message()?.createdDate | date }}</div>
               
               <div class="col-4 font-bold">Last Modified:</div>
-              <div class="col-8">{{ message?.lastModifiedDate | date }}</div>
+              <div class="col-8">{{ message()?.lastModifiedDate | date }}</div>
               
               <div class="col-4 font-bold">Fields:</div>
-              <div class="col-8">{{ message?.fields?.length || 0 }}</div>
+              <div class="col-8">{{ message()?.fields?.length || 0 }}</div>
             </div>
             
             <div class="flex justify-content-end gap-2 mt-4">
@@ -112,7 +114,7 @@ import { exportMessage, loadMessage } from '../../store/message/message.actions'
                 icon="pi pi-arrow-left" 
                 label="Back to Root" 
                 class="p-button-outlined"
-                [routerLink]="['/roots', message?.rootId]"
+                [routerLink]="['/roots', message()?.rootId]"
               ></button>
               <button 
                 pButton 
@@ -129,7 +131,7 @@ import { exportMessage, loadMessage } from '../../store/message/message.actions'
         <div class="col-8">
           <p-card header="Fields" styleClass="h-full">
             <p-treeTable 
-              [value]="fieldTreeNodes"
+              [value]="fieldTreeNodes()"
               [paginator]="true"
               [rows]="10"
               [rowsPerPageOptions]="[10, 25, 50]"
@@ -203,48 +205,52 @@ import { exportMessage, loadMessage } from '../../store/message/message.actions'
     </div>
     
     <p-dialog 
-      [(visible)]="messageDialogVisible" 
+      [visible]="messageDialogVisible()" (visibleChange)="messageDialogVisible.set($event)"
       [header]="'Edit Message'"
       [modal]="true" 
       [draggable]="false" 
       [resizable]="false"
       [style]="{width: '500px'}"
+      (visibleChange)="setMessageDialogVisible($event)"
     >
       <app-message-form 
-        [message]="message"
-        [rootId]="message?.rootId || ''"
+        [message]="message()"
+        [rootId]="message()?.rootId || ''"
         (formSubmit)="onMessageFormSubmit($event)"
-        (formCancel)="messageDialogVisible = false"
+        (formCancel)="setMessageDialogVisible(false)"
       ></app-message-form>
     </p-dialog>
     
     <p-dialog 
-      [(visible)]="fieldDialogVisible" 
-      [header]="fieldDialogHeader"
+      [visible]="fieldDialogVisible()" (visibleChange)="fieldDialogVisible.set($event)"
+      [header]="fieldDialogHeader()"
       [modal]="true" 
       [draggable]="false" 
       [resizable]="false"
       [style]="{width: '600px'}"
+      (visibleChange)="setFieldDialogVisible($event)"
     >
       <app-field-form 
-        [field]="selectedField"
-        [messageId]="messageId"
+        [field]="selectedField()"
+        [messageId]="messageId()"
         [parentFieldId]="null"
         (formSubmit)="onFieldFormSubmit($event)"
-        (formCancel)="fieldDialogVisible = false"
+        (formCancel)="setFieldDialogVisible(false)"
       ></app-field-form>
     </p-dialog>
     
     <p-dialog 
-      [(visible)]="exportDialogVisible"
+    [visible]="exportDialogVisible()" (visibleChange)="exportDialogVisible.set($event)"
+
       header="Exported XML"
       [modal]="true"
       [draggable]="false"
       [resizable]="false"
       [style]="{width: '80vw'}"
+      (visibleChange)="setExportDialogVisible($event)"
     >
       <div class="p-3 border rounded bg-gray-100 overflow-auto" style="max-height: 70vh">
-        <pre>{{ exportedXml }}</pre>
+        <pre>{{ exportedXml() }}</pre>
       </div>
       <div class="flex justify-content-end mt-4">
         <button 
@@ -252,7 +258,7 @@ import { exportMessage, loadMessage } from '../../store/message/message.actions'
           type="button" 
           label="Copy" 
           icon="pi pi-copy" 
-          (click)="copyToClipboard(exportedXml)"
+          (click)="copyToClipboard(exportedXml())"
         ></button>
         <button 
           pButton 
@@ -260,97 +266,128 @@ import { exportMessage, loadMessage } from '../../store/message/message.actions'
           label="Close" 
           icon="pi pi-times" 
           class="p-button-outlined ml-2" 
-          (click)="exportDialogVisible = false"
+          (click)="setExportDialogVisible(false)"
         ></button>
       </div>
     </p-dialog>
   `
 })
-export class MessageDetailComponent implements OnInit, OnDestroy {
-  messageId: string = '';
-  message: Message | null = null;
-  breadcrumbs: Breadcrumb[] = [];
-  fieldTreeNodes: TreeNode[] = [];
-  
-  messageDialogVisible = false;
-  
-  fieldDialogVisible = false;
-  fieldDialogHeader = '';
-  selectedField: Field | null = null;
-  
-  exportDialogVisible = false;
-  exportedXml: string = '';
-  
-  private destroy$ = new Subject<void>();
+export class MessageDetailComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private store = inject(Store<AppState>);
+  private confirmationService = inject(ConfirmationService);
+  private messageService = inject(MessageService);
+  private signalRService = inject(SignalRService);
 
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private store: Store<AppState>,
-    private confirmationService: ConfirmationService,
-    private messageService: MessageService,
-    private signalRService: SignalRService
-  ) {}
+  // Signal state
+  messageId = signal<string>('');
+  message = signal<Message | null>(null);
+  breadcrumbs = signal<Breadcrumb[]>([]);
+  fieldTreeNodes = signal<TreeNode[]>([]);
+
+  messageDialogVisible = signal<boolean>(false);
+
+  fieldDialogVisible = signal<boolean>(false);
+  fieldDialogHeader = signal<string>('');
+  selectedField = signal<Field | null>(null);
+
+  exportDialogVisible = signal<boolean>(false);
+  exportedXml = signal<string>('');
+
+  // Get the exported XML as a signal
+  private exportedXmlFromStore = toSignal(
+    this.store.select(state => state.messages.exportedXml),
+    { initialValue: '' }
+  );
 
   ngOnInit() {
-    this.route.params.pipe(takeUntil(this.destroy$)).subscribe(params => {
-      this.messageId = params['id'];
-      
+    // Get message ID from route params
+    this.route.params.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(params => {
+      const id = params['id'];
+      this.messageId.set(id);
+
       // Load message details
-      this.store.dispatch(loadMessage({ id: this.messageId }));
-      
-      // Subscribe to message data
-      this.store.select(selectMessageById(this.messageId)).pipe(
-        takeUntil(this.destroy$)
-      ).subscribe(message => {
-        if (message) {
-          this.message = message;
-          
-          // Build field tree nodes
-          this.buildFieldTreeNodes();
-          
-          // Update breadcrumbs
-          this.breadcrumbs = [
-            { label: 'Projects', routerLink: ['/projects'] },
-            { label: 'Root', routerLink: ['/roots', message.rootId] },
-            { label: message.name }
-          ];
-          
-          // Join SignalR group for this project
-          if (message.rootId) {
-            // Since we don't have the projectId directly, we'll manage it through the root
-            this.store.select(state => 
-              state.roots.roots.find(r => r.id === message.rootId)?.projectId || ''
-            ).pipe(
-              takeUntil(this.destroy$)
-            ).subscribe(projectId => {
-              if (projectId) {
-                this.signalRService.joinProject(projectId);
-              }
-            });
+      this.store.dispatch(loadMessage({ id }));
+    });
+
+    // Create an effect to listen for message changes
+    effect(() => {
+      const messageId = this.messageId();
+      if (!messageId) return;
+
+      // Setup message observer
+      this.store.select(selectMessageById(messageId))
+        .pipe(
+          takeUntilDestroyed(this.destroyRef),
+          filter(message => !!message)
+        )
+        .subscribe(message => {
+          if (message) {
+            this.message.set(message);
+            this.buildFieldTreeNodes();
+            this.updateBreadcrumbs(message);
+            this.setupSignalR(message);
           }
-        }
-      });
+        });
+    });
+
+    // Effect for handling exported XML
+    effect(() => {
+      const xml = this.exportedXmlFromStore();
+      if (xml) {
+        this.exportedXml.set(xml);
+        this.exportDialogVisible.set(true);
+      }
     });
   }
 
-  ngOnDestroy() {
-    // Leave SignalR group - handled in parent component
-    this.destroy$.next();
-    this.destroy$.complete();
+  private updateBreadcrumbs(message: Message) {
+    this.breadcrumbs.set([
+      { label: 'Projects', routerLink: ['/projects'] },
+      { label: 'Root', routerLink: ['/roots', message.rootId] },
+      { label: message.name }
+    ]);
+  }
+
+  private setupSignalR(message: Message) {
+    if (message.rootId) {
+      // Get project ID from the root
+      this.store.select(state =>
+        state.roots.roots.find((r: { id: string }) => r.id === message.rootId)?.projectId || ''
+      )
+        .pipe(
+          takeUntilDestroyed(this.destroyRef),
+          filter(projectId => !!projectId)
+        )
+        .subscribe(projectId => {
+          if (projectId) {
+            this.signalRService.joinProject(projectId);
+          }
+        });
+    }
   }
 
   buildFieldTreeNodes() {
-    if (!this.message || !this.message.fields) {
-      this.fieldTreeNodes = [];
+    const currentMessage = this.message();
+
+    if (!currentMessage || !currentMessage.fields) {
+      this.fieldTreeNodes.set([]);
       return;
     }
-    
+
     // Get top-level fields (those without a parent)
-    const topLevelFields = this.message.fields.filter(f => !f.parentFieldId);
-    
+    const topLevelFields = currentMessage.fields.filter(f => !f.parentFieldId);
+
     // Build tree nodes
-    this.fieldTreeNodes = topLevelFields.map(field => this.createFieldTreeNode(field, this.message!.fields));
+    const nodes = topLevelFields.map(field =>
+      this.createFieldTreeNode(field, currentMessage.fields)
+    );
+
+    this.fieldTreeNodes.set(nodes);
   }
 
   createFieldTreeNode(field: Field, allFields: Field[]): TreeNode {
@@ -358,60 +395,80 @@ export class MessageDetailComponent implements OnInit, OnDestroy {
       data: field,
       children: []
     };
-    
+
     // If this is a complex field, add child fields
     if (field.type === FieldType.Complex) {
       // Find all child fields of this field
       const childFields = allFields.filter(f => f.parentFieldId === field.id);
       if (childFields.length > 0) {
-        node.children = childFields.map(childField => 
+        node.children = childFields.map(childField =>
           this.createFieldTreeNode(childField, allFields)
         );
       }
     }
-    
+
     return node;
   }
 
   showEditMessageDialog() {
-    this.messageDialogVisible = true;
+    this.messageDialogVisible.set(true);
+  }
+
+  setMessageDialogVisible(value: boolean) {
+    this.messageDialogVisible.set(value);
   }
 
   onMessageFormSubmit(message: Message) {
     this.store.dispatch(updateMessage({ message }));
     this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Message updated successfully' });
-    this.messageDialogVisible = false;
+    this.messageDialogVisible.set(false);
   }
 
   showCreateFieldDialog() {
-    this.selectedField = null;
-    this.fieldDialogHeader = 'Create New Field';
-    this.fieldDialogVisible = true;
+    this.selectedField.set(null);
+    this.fieldDialogHeader.set('Create New Field');
+    this.fieldDialogVisible.set(true);
   }
 
   showEditFieldDialog(field: Field) {
-    this.selectedField = { ...field };
-    this.fieldDialogHeader = 'Edit Field';
-    this.fieldDialogVisible = true;
+    this.selectedField.set({ ...field });
+    this.fieldDialogHeader.set('Edit Field');
+    this.fieldDialogVisible.set(true);
+  }
+
+  setFieldDialogVisible(value: boolean) {
+    this.fieldDialogVisible.set(value);
   }
 
   onFieldFormSubmit(field: Field) {
-    if (this.selectedField) {
+    const currentSelectedField = this.selectedField();
+
+    if (currentSelectedField) {
       // Update
-      this.store.dispatch(updateField({ field: { ...field, id: this.selectedField.id } }));
-      this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Field updated successfully' });
+      this.store.dispatch(updateField({
+        field: { ...field, id: currentSelectedField.id }
+      }));
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Success',
+        detail: 'Field updated successfully'
+      });
     } else {
       // Create
-      this.store.dispatch(createField({ 
-        field: { 
-          ...field, 
-          messageId: this.messageId,
+      this.store.dispatch(createField({
+        field: {
+          ...field,
+          messageId: this.messageId(),
           parentFieldId: null
-        } 
+        }
       }));
-      this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Field created successfully' });
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Success',
+        detail: 'Field created successfully'
+      });
     }
-    this.fieldDialogVisible = false;
+    this.fieldDialogVisible.set(false);
   }
 
   confirmDeleteField(field: Field) {
@@ -421,35 +478,42 @@ export class MessageDetailComponent implements OnInit, OnDestroy {
       icon: 'pi pi-exclamation-triangle',
       accept: () => {
         this.store.dispatch(deleteField({ id: field.id }));
-        this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Field deleted successfully' });
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Success',
+          detail: 'Field deleted successfully'
+        });
       }
     });
   }
 
   exportMessage() {
-    if (!this.messageId) return;
-    
-    this.store.dispatch(exportMessage({ id: this.messageId }));
-    
-    // Subscribe to the exported XML
-    this.store.select(state => state.messages.exportedXml).pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(xml => {
-      if (xml) {
-        this.exportedXml = xml;
-        this.exportDialogVisible = true;
-      }
-    });
+    const id = this.messageId();
+    if (!id) return;
+
+    this.store.dispatch(exportMessage({ id }));
+  }
+
+  setExportDialogVisible(value: boolean) {
+    this.exportDialogVisible.set(value);
   }
 
   copyToClipboard(text: string) {
     navigator.clipboard.writeText(text).then(
       () => {
-        this.messageService.add({ severity: 'success', summary: 'Success', detail: 'XML copied to clipboard' });
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Success',
+          detail: 'XML copied to clipboard'
+        });
       },
       (err) => {
         console.error('Could not copy text: ', err);
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to copy to clipboard' });
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Failed to copy to clipboard'
+        });
       }
     );
   }
@@ -462,7 +526,3 @@ export class MessageDetailComponent implements OnInit, OnDestroy {
     // TODO: Reset search results
   }
 }
-function updateMessage(arg0: { message: Message; }): any {
-  throw new Error('Function not implemented.');
-}
-

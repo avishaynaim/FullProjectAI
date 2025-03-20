@@ -1,5 +1,5 @@
 // src/app/components/message/message-form.component.ts
-import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
@@ -16,7 +16,7 @@ import { Message } from '../../models/message.model';
     ButtonModule
   ],
   template: `
-    <form [formGroup]="messageForm" (ngSubmit)="onSubmit()" class="p-fluid">
+    <form [formGroup]="messageForm()" (ngSubmit)="onSubmit()" class="p-fluid">
       <div class="field">
         <label for="name" class="font-bold">Name</label>
         <input 
@@ -24,9 +24,9 @@ import { Message } from '../../models/message.model';
           type="text" 
           pInputText 
           formControlName="name"
-          [ngClass]="{'ng-invalid ng-dirty': submitted && f['name'].errors}"
+          [ngClass]="{'ng-invalid ng-dirty': submitted() && f()['name'].errors}"
         />
-        <small *ngIf="submitted && f['name'].errors?.['required']" class="p-error">
+        <small *ngIf="submitted() && f()['name'].errors?.['required']" class="p-error">
           Name is required
         </small>
       </div>
@@ -53,7 +53,7 @@ import { Message } from '../../models/message.model';
           pButton 
           type="submit" 
           label="Save" 
-          [disabled]="messageForm.invalid"
+          [disabled]="messageForm().invalid"
         ></button>
       </div>
     </form>
@@ -65,15 +65,14 @@ export class MessageFormComponent implements OnInit, OnChanges {
   @Output() formSubmit = new EventEmitter<Message>();
   @Output() formCancel = new EventEmitter<void>();
 
-  messageForm: FormGroup;
-  submitted = false;
+  private fb = inject(FormBuilder);
 
-  constructor(private fb: FormBuilder) {
-    this.messageForm = this.fb.group({
-      name: ['', Validators.required],
-      description: ['']
-    });
-  }
+  // Convert to signals
+  messageForm = signal<FormGroup>(this.createForm());
+  submitted = signal<boolean>(false);
+
+  // Computed property for form controls
+  f = computed(() => this.messageForm().controls);
 
   ngOnInit() {
     this.initForm();
@@ -85,27 +84,32 @@ export class MessageFormComponent implements OnInit, OnChanges {
     }
   }
 
-  get f() {
-    return this.messageForm.controls;
+  private createForm(): FormGroup {
+    return this.fb.group({
+      name: ['', Validators.required],
+      description: ['']
+    });
   }
 
   initForm() {
+    const form = this.createForm();
+    
     if (this.message) {
-      this.messageForm.patchValue({
+      form.patchValue({
         name: this.message.name,
         description: this.message.description
       });
-    } else {
-      this.messageForm.reset();
     }
-    this.submitted = false;
+    
+    this.messageForm.set(form);
+    this.submitted.set(false);
   }
 
   onSubmit() {
-    this.submitted = true;
+    this.submitted.set(true);
     
-    if (this.messageForm.valid) {
-      const formData = this.messageForm.value;
+    if (this.messageForm().valid) {
+      const formData = this.messageForm().value;
       
       const message: Message = {
         id: this.message?.id || '',
@@ -118,13 +122,12 @@ export class MessageFormComponent implements OnInit, OnChanges {
       };
       
       this.formSubmit.emit(message);
-      this.submitted = false;
+      this.submitted.set(false);
     }
   }
 
   onCancel() {
     this.formCancel.emit();
-    this.submitted = false;
+    this.submitted.set(false);
   }
 }
-

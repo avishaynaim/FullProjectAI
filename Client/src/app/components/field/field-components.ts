@@ -1,9 +1,8 @@
 // src/app/components/field/field-form.component.ts
-import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
-// import { InputTextareaModule } from 'primeng/inputtextarea';
 import { DropdownModule } from 'primeng/dropdown';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ButtonModule } from 'primeng/button';
@@ -21,14 +20,13 @@ import { deleteEnumValue } from '../../store/enum-value/enum-value.actions';
     CommonModule,
     ReactiveFormsModule,
     InputTextModule,
-    // InputTextareaModule,
     DropdownModule,
     CheckboxModule,
     ButtonModule,
     TableModule
   ],
   template: `
-    <form [formGroup]="fieldForm" (ngSubmit)="onSubmit()" class="p-fluid">
+    <form [formGroup]="fieldForm()" (ngSubmit)="onSubmit()" class="p-fluid">
       <div class="grid">
         <div class="col-12 md:col-6">
           <div class="field">
@@ -38,9 +36,9 @@ import { deleteEnumValue } from '../../store/enum-value/enum-value.actions';
               type="text" 
               pInputText 
               formControlName="name"
-              [ngClass]="{'ng-invalid ng-dirty': submitted && f['name'].errors}"
+              [ngClass]="{'ng-invalid ng-dirty': submitted() && f()['name'].errors}"
             />
-            <small *ngIf="submitted && f['name'].errors?.['required']" class="p-error">
+            <small *ngIf="submitted() && f()['name'].errors?.['required']" class="p-error">
               Name is required
             </small>
           </div>
@@ -56,9 +54,9 @@ import { deleteEnumValue } from '../../store/enum-value/enum-value.actions';
               optionLabel="label" 
               optionValue="value" 
               placeholder="Select a type"
-              [ngClass]="{'ng-invalid ng-dirty': submitted && f['type'].errors}"
+              [ngClass]="{'ng-invalid ng-dirty': submitted() && f()['type'].errors}"
             ></p-dropdown>
-            <small *ngIf="submitted && f['type'].errors?.['required']" class="p-error">
+            <small *ngIf="submitted() && f()['type'].errors?.['required']" class="p-error">
               Type is required
             </small>
           </div>
@@ -101,7 +99,7 @@ import { deleteEnumValue } from '../../store/enum-value/enum-value.actions';
       </div>
       
       <!-- Enum Values Section (only visible for Enum type) -->
-      <div class="field" *ngIf="f['type'].value === 'Enum'">
+      <div class="field" *ngIf="f()['type'].value === 'Enum'">
         <div class="flex justify-content-between align-items-center mb-2">
           <label class="font-bold">Enum Values</label>
           <button 
@@ -115,7 +113,7 @@ import { deleteEnumValue } from '../../store/enum-value/enum-value.actions';
         </div>
         
         <div formArrayName="enumValues">
-          <p-table [value]="enumValuesControls.controls" styleClass="p-datatable-sm">
+          <p-table [value]="enumValuesControls().controls" styleClass="p-datatable-sm">
             <ng-template pTemplate="header">
               <tr>
                 <th>Name</th>
@@ -133,7 +131,7 @@ import { deleteEnumValue } from '../../store/enum-value/enum-value.actions';
                     formControlName="name" 
                     placeholder="Name"
                     class="w-full"
-                    [ngClass]="{'ng-invalid ng-dirty': submitted && control.get('name')?.errors}"
+                    [ngClass]="{'ng-invalid ng-dirty': submitted() && control.get('name')?.errors}"
                   />
                 </td>
                 <td>
@@ -143,7 +141,7 @@ import { deleteEnumValue } from '../../store/enum-value/enum-value.actions';
                     formControlName="value" 
                     placeholder="Value"
                     class="w-full"
-                    [ngClass]="{'ng-invalid ng-dirty': submitted && control.get('value')?.errors}"
+                    [ngClass]="{'ng-invalid ng-dirty': submitted() && control.get('value')?.errors}"
                   />
                 </td>
                 <td>
@@ -175,7 +173,7 @@ import { deleteEnumValue } from '../../store/enum-value/enum-value.actions';
             </ng-template>
           </p-table>
           
-          <small *ngIf="submitted && (!enumValuesControls.controls.length && f['type'].value === 'Enum')" class="p-error block mt-2">
+          <small *ngIf="submitted() && (!enumValuesControls().controls.length && f()['type'].value === 'Enum')" class="p-error block mt-2">
             At least one enum value is required
           </small>
         </div>
@@ -193,7 +191,7 @@ import { deleteEnumValue } from '../../store/enum-value/enum-value.actions';
           pButton 
           type="submit" 
           label="Save" 
-          [disabled]="fieldForm.invalid"
+          [disabled]="fieldForm().invalid"
         ></button>
       </div>
     </form>
@@ -206,8 +204,11 @@ export class FieldFormComponent implements OnInit, OnChanges {
   @Output() formSubmit = new EventEmitter<Field>();
   @Output() formCancel = new EventEmitter<void>();
 
-  fieldForm: FormGroup;
-  submitted = false;
+  private fb = inject(FormBuilder);
+  private store = inject(Store<AppState>);
+
+  submitted = signal<boolean>(false);
+  fieldForm = signal<FormGroup>(this.createFieldForm());
   
   fieldTypes = [
     { label: 'String', value: FieldType.String },
@@ -219,11 +220,18 @@ export class FieldFormComponent implements OnInit, OnChanges {
     { label: 'Complex', value: FieldType.Complex }
   ];
 
-  constructor(
-    private fb: FormBuilder,
-    private store: Store<AppState>
-  ) {
-    this.fieldForm = this.createFieldForm();
+  f = computed(() => this.fieldForm().controls);
+  
+  enumValuesControls = computed(() => 
+    this.fieldForm().get('enumValues') as FormArray
+  );
+
+  constructor() {
+    // Form value change effect
+    effect(() => {
+      const form = this.fieldForm();
+      // You can add effects here if needed
+    });
   }
 
   ngOnInit() {
@@ -234,14 +242,6 @@ export class FieldFormComponent implements OnInit, OnChanges {
     if (changes['field']) {
       this.initForm();
     }
-  }
-
-  get f() {
-    return this.fieldForm.controls;
-  }
-
-  get enumValuesControls() {
-    return this.fieldForm.get('enumValues') as FormArray;
   }
 
   createFieldForm(): FormGroup {
@@ -256,8 +256,10 @@ export class FieldFormComponent implements OnInit, OnChanges {
   }
 
   initForm() {
+    const newForm = this.createFieldForm();
+
     if (this.field) {
-      this.fieldForm.patchValue({
+      newForm.patchValue({
         name: this.field.name,
         description: this.field.description,
         type: this.field.type,
@@ -265,30 +267,17 @@ export class FieldFormComponent implements OnInit, OnChanges {
         isRequired: this.field.isRequired
       });
       
-      // Clear existing enum values
-      while (this.enumValuesControls.length) {
-        this.enumValuesControls.removeAt(0);
-      }
-      
       // Add enum values if field is of type Enum
       if (this.field.type === FieldType.Enum && this.field.enumValues?.length) {
+        const enumValuesArray = newForm.get('enumValues') as FormArray;
         this.field.enumValues.forEach(enumValue => {
-          this.enumValuesControls.push(this.createEnumValueFormGroup(enumValue));
+          enumValuesArray.push(this.createEnumValueFormGroup(enumValue));
         });
-      }
-    } else {
-      this.fieldForm.reset({
-        type: FieldType.String,
-        isRequired: false
-      });
-      
-      // Clear enum values
-      while (this.enumValuesControls.length) {
-        this.enumValuesControls.removeAt(0);
       }
     }
     
-    this.submitted = false;
+    this.fieldForm.set(newForm);
+    this.submitted.set(false);
   }
 
   createEnumValueFormGroup(enumValue: EnumValue | null = null): FormGroup {
@@ -302,30 +291,32 @@ export class FieldFormComponent implements OnInit, OnChanges {
   }
 
   addEnumValue() {
-    this.enumValuesControls.push(this.createEnumValueFormGroup());
+    const enumValues = this.fieldForm().get('enumValues') as FormArray;
+    enumValues.push(this.createEnumValueFormGroup());
   }
 
   removeEnumValue(index: number) {
-    const enumValue = this.enumValuesControls.at(index).value;
+    const enumValues = this.fieldForm().get('enumValues') as FormArray;
+    const enumValue = enumValues.at(index).value;
     
     // If the enum value has an ID, it exists in the database and should be deleted
     if (enumValue.id) {
       this.store.dispatch(deleteEnumValue({ id: enumValue.id }));
     }
     
-    this.enumValuesControls.removeAt(index);
+    enumValues.removeAt(index);
   }
 
   onSubmit() {
-    this.submitted = true;
+    this.submitted.set(true);
     
-    if (this.fieldForm.valid) {
+    if (this.fieldForm().valid) {
       // If field type is Enum, make sure there's at least one enum value
-      if (this.fieldForm.value.type === FieldType.Enum && this.enumValuesControls.length === 0) {
+      if (this.fieldForm().value.type === FieldType.Enum && this.enumValuesControls().length === 0) {
         return;
       }
       
-      const formData = this.fieldForm.value;
+      const formData = this.fieldForm().value;
       
       const field: Field = {
         id: this.field?.id || '',
@@ -346,13 +337,12 @@ export class FieldFormComponent implements OnInit, OnChanges {
       };
       
       this.formSubmit.emit(field);
-      this.submitted = false;
+      this.submitted.set(false);
     }
   }
 
   onCancel() {
     this.formCancel.emit();
-    this.submitted = false;
+    this.submitted.set(false);
   }
 }
-

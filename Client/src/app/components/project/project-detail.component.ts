@@ -1,10 +1,12 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+// project-detail.component.ts
+import { Component, OnDestroy, OnInit, signal, computed, effect, inject, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { BehaviorSubject, Observable, Subject, combineLatest, of } from 'rxjs';
-import { filter, map, take, takeUntil, tap, withLatestFrom } from 'rxjs/operators';
+import { Observable, Subject } from 'rxjs';
+import { filter, map } from 'rxjs/operators';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { AppState } from '../../store/app.state';
 import { selectProjectById } from '../../store/project/project.selectors';
 import { selectRootsByProjectId } from '../../store/root/root.selectors';
@@ -21,6 +23,8 @@ import { InputTextModule } from 'primeng/inputtext';
 import { RippleModule } from 'primeng/ripple';
 import { TooltipModule } from 'primeng/tooltip';
 import { MessageService, ConfirmationService } from 'primeng/api';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ToastModule } from 'primeng/toast';
 import { SignalRService } from '../../services/signalr.service';
 import { Project } from '../../models/project.model';
 import { loadProject } from '../../store/project/project.actions';
@@ -34,6 +38,7 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
     CommonModule,
     RouterModule,
     FormsModule,
+    ReactiveFormsModule,
     CardModule,
     TableModule,
     TreeModule,
@@ -43,7 +48,9 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
     TabViewModule,
     InputTextModule,
     RippleModule,
-    TooltipModule
+    TooltipModule,
+    ConfirmDialogModule,
+    ToastModule
   ],
   providers: [MessageService, ConfirmationService],
   animations: [
@@ -70,138 +77,514 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
       ])
     ])
   ],
-  templateUrl: './project-detail.component.html',
+  template: `
+    <div class="project-container" @fadeIn>
+      <!-- Breadcrumb navigation -->
+      <div class="breadcrumb-container">
+        <ng-container *ngFor="let crumb of breadcrumbs(); let last = last; let i = index">
+          <div class="breadcrumb-item">
+            <a 
+              [routerLink]="crumb.routerLink" 
+              class="breadcrumb-link"
+              [class.active]="last"
+            >
+              <i *ngIf="i === 0" class="pi pi-home"></i>
+              <span>{{ crumb.label }}</span>
+            </a>
+            <i *ngIf="!last" class="pi pi-angle-right breadcrumb-separator"></i>
+          </div>
+        </ng-container>
+      </div>
+
+      <!-- Main header with search and actions -->
+      <div class="project-header" @slideIn>
+        <div class="header-left">
+          <h1 class="project-title">{{ project()?.name || 'Project Details' }}</h1>
+        </div>
+        <div class="header-right">
+          <div class="search-container">
+            <span class="p-input-icon-left">
+              <i class="pi pi-search"></i>
+              <input 
+                type="text" 
+                pInputText 
+                [ngModel]="searchTerm()" 
+                (input)="onSearch($event)" 
+                placeholder="Search by name, description, etc."
+                class="search-input"
+              />
+            </span>
+            <button 
+              *ngIf="searchTerm()" 
+              pButton 
+              pRipple 
+              type="button" 
+              icon="pi pi-times" 
+              class="p-button-rounded p-button-text clear-search-btn" 
+              (click)="onClearSearch()"
+              pTooltip="Clear search"
+            ></button>
+          </div>
+          <button 
+            pButton 
+            pRipple 
+            type="button" 
+            label="New Root" 
+            icon="pi pi-plus" 
+            class="p-button-success action-button" 
+            (click)="showCreateRootDialog()"
+            pTooltip="Create new root"
+          ></button>
+          <button 
+            pButton 
+            pRipple 
+            type="button" 
+            label="Export All" 
+            icon="pi pi-download" 
+            class="p-button-primary action-button" 
+            (click)="exportAllRoots()"
+            [disabled]="!roots()?.length"
+            pTooltip="Export all roots"
+          ></button>
+        </div>
+      </div>
+      
+      <!-- Tab navigation -->
+      <div class="tab-container" @slideIn>
+        <ul class="tab-nav">
+          <li 
+            class="tab-item" 
+            [class.active]="activeTab() === 'tree'" 
+            (click)="setActiveTab('tree')"
+          >
+            <i class="pi pi-sitemap"></i>
+            <span>Tree View</span>
+          </li>
+          <li 
+            class="tab-item" 
+            [class.active]="activeTab() === 'list'" 
+            (click)="setActiveTab('list')"
+          >
+            <i class="pi pi-list"></i>
+            <span>Roots List</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Tab content -->
+      <div class="tab-content" @staggerIn>
+        <!-- Tree View -->
+        <div *ngIf="activeTab() === 'tree'" class="tree-view-container">
+          <div class="tree-layout">
+            <div class="tree-sidebar stagger-item">
+            <p-tree
+  [value]="treeNodes()"
+  selectionMode="single"
+  [selection]="selectedNode()" 
+  (selectionChange)="onSelectionChange($event)"
+  (onNodeSelect)="onNodeSelect($event)"
+  [filter]="true"
+  [filterMode]="'lenient'"
+  filterPlaceholder="Search tree..."
+  styleClass="custom-tree"
+>
+                <ng-template pTemplate="header">
+                  <div class="p-tree-header">
+                    <strong>Project Structure</strong>
+                  </div>
+                </ng-template>
+              </p-tree>
+            </div>
+            
+            <div class="tree-details stagger-item">
+              <ng-container *ngIf="selectedNode()">
+                <div class="details-card">
+                  <div class="details-header">
+                    <h2 class="details-title">{{ getSelectedNodeHeader(selectedNode()) }}</h2>
+                  </div>
+                  
+                  <div class="details-content" *ngIf="selectedNodeDetails()">
+                    <div class="details-property" *ngFor="let prop of getVisibleProperties(selectedNodeDetails(), selectedNode()?.type ?? '')">
+                      <div class="property-label">{{ prop.label }}:</div>
+                      <div class="property-value">
+                        <ng-container [ngSwitch]="prop.type">
+                          <span *ngSwitchCase="'date'">{{ selectedNodeDetails()[prop.field] | date }}</span>
+                          <span *ngSwitchCase="'boolean'">{{ selectedNodeDetails()[prop.field] ? 'Yes' : 'No' }}</span>
+                          <span *ngSwitchCase="'count'">{{ selectedNodeDetails()[prop.field]?.length || 0 }}</span>
+                          <span *ngSwitchDefault>{{ selectedNodeDetails()[prop.field] }}</span>
+                        </ng-container>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="details-actions">
+                    <button 
+                      pButton 
+                      pRipple 
+                      type="button" 
+                      icon="pi pi-eye" 
+                      label="View Details" 
+                      class="p-button-info action-btn"
+                      (click)="viewNodeDetails(selectedNode())"
+                    ></button>
+                    <button 
+                      pButton 
+                      pRipple 
+                      type="button" 
+                      icon="pi pi-pencil" 
+                      label="Edit" 
+                      class="p-button-success action-btn" 
+                      (click)="editSelectedNode(selectedNode())"
+                    ></button>
+                    <button 
+                      pButton 
+                      pRipple 
+                      type="button" 
+                      icon="pi pi-trash" 
+                      label="Delete" 
+                      class="p-button-danger action-btn" 
+                      (click)="deleteSelectedNode(selectedNode())"
+                    ></button>
+                    <button 
+                      pButton 
+                      pRipple 
+                      type="button" 
+                      icon="pi pi-download" 
+                      label="Export" 
+                      class="p-button-secondary action-btn" 
+                      (click)="exportSelectedNode(selectedNode())"
+                      *ngIf="selectedNode()?.type !== 'project'"
+                    ></button>
+                  </div>
+                </div>
+              </ng-container>
+              
+              <div *ngIf="!selectedNode()" class="no-selection stagger-item">
+                <div class="selection-hint">
+                  <i class="pi pi-arrow-left hint-icon"></i>
+                  <p class="hint-text">Select an item from the tree to view details</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Roots List -->
+        <div *ngIf="activeTab() === 'list'" class="roots-list-container stagger-item">
+          <p-table 
+            [value]="roots() ?? []" 
+            styleClass="custom-table"
+            [paginator]="true" 
+            [rows]="10" 
+            [rowsPerPageOptions]="[10, 25, 50]" 
+            [showCurrentPageReport]="true"
+            currentPageReportTemplate="Showing {first} to {last} of {totalRecords} roots"
+            [rowHover]="true"
+            responsiveLayout="scroll"
+          >
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Messages</th>
+                <th>Created</th>
+                <th>Last Modified</th>
+                <th style="width: 150px">Actions</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-root>
+              <tr>
+                <td>{{ root.name }}</td>
+                <td>{{ root.description }}</td>
+                <td>{{ root.messages?.length || 0 }}</td>
+                <td>{{ root.createdDate | date:'short' }}</td>
+                <td>{{ root.lastModifiedDate | date:'short' }}</td>
+                <td>
+                  <div class="table-actions">
+                    <button 
+                      pButton 
+                      pRipple 
+                      type="button" 
+                      icon="pi pi-eye" 
+                      class="p-button-rounded p-button-info p-button-sm" 
+                      [routerLink]="['/roots', root.id]"
+                      pTooltip="View"
+                    ></button>
+                    <button 
+                      pButton 
+                      pRipple 
+                      type="button" 
+                      icon="pi pi-pencil" 
+                      class="p-button-rounded p-button-success p-button-sm" 
+                      (click)="showEditRootDialog(root)"
+                      pTooltip="Edit"
+                    ></button>
+                    <button 
+                      pButton 
+                      pRipple 
+                      type="button" 
+                      icon="pi pi-trash" 
+                      class="p-button-rounded p-button-danger p-button-sm" 
+                      (click)="confirmDeleteRoot(root)"
+                      pTooltip="Delete"
+                    ></button>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="6" class="empty-message">
+                  <i class="pi pi-folder-open empty-icon"></i>
+                  <p>No roots found for this project</p>
+                  <button 
+                    pButton 
+                    pRipple 
+                    type="button" 
+                    label="Create Root" 
+                    icon="pi pi-plus" 
+                    class="p-button-success p-button-sm" 
+                    (click)="showCreateRootDialog()"
+                  ></button>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Root dialog -->
+    <p-dialog 
+        [visible]="rootDialogVisible()" (visibleChange)="rootDialogVisible.set($event)"
+      [header]="rootDialogHeader()"
+      [modal]="true" 
+      [draggable]="false" 
+      [resizable]="false"
+      [style]="{width: '500px'}"
+      [contentStyle]="{padding: '1.5rem'}"
+      [dismissableMask]="true"
+      [closeOnEscape]="true"
+      styleClass="custom-dialog"
+      (onHide)="onDialogHide()"
+    >
+      <ng-container *ngIf="rootDialogVisible()">
+        <div class="dialog-form">
+          <form [formGroup]="rootForm">
+            <div class="form-field">
+              <label for="rootName" class="field-label">Name</label>
+              <input 
+                id="rootName" 
+                type="text" 
+                pInputText 
+                formControlName="name"
+                class="w-full field-input" 
+              />
+            </div>
+            
+            <div class="form-field">
+              <label for="rootDescription" class="field-label">Description</label>
+              <textarea 
+                id="rootDescription"
+                pInputTextarea
+                formControlName="description"
+                rows="4"
+                class="w-full field-input textarea"
+              ></textarea>
+            </div>
+          </form>
+        </div>
+      </ng-container>
+      
+      <ng-template pTemplate="footer">
+        <button 
+          pButton 
+          pRipple 
+          type="button" 
+          label="Cancel" 
+          icon="pi pi-times" 
+          class="p-button-outlined" 
+          (click)="closeDialog()"
+        ></button>
+        <button 
+          pButton 
+          pRipple 
+          type="button" 
+          label="Save" 
+          icon="pi pi-check" 
+          class="p-button-success" 
+          [disabled]="rootForm.invalid"
+          (click)="saveRoot()"
+        ></button>
+      </ng-template>
+    </p-dialog>
+
+    <!-- Export dialog -->
+    <p-dialog 
+        [visible]="exportDialogVisible()" (visibleChange)="exportDialogVisible.set($event)"
+      
+      header="Exported XML"
+      [modal]="true"
+      [draggable]="false"
+      [resizable]="false"
+      [style]="{width: '80vw'}"
+      [contentStyle]="{padding: '0'}"
+      [dismissableMask]="true"
+      [closeOnEscape]="true"
+      styleClass="custom-dialog export-dialog"
+    >
+      <div class="export-content">
+        <pre class="export-code">{{ exportedXml() }}</pre>
+      </div>
+      
+      <ng-template pTemplate="footer">
+        <button 
+          pButton 
+          pRipple 
+          type="button" 
+          label="Copy" 
+          icon="pi pi-copy" 
+          class="p-button-primary" 
+          (click)="exportedXml() && copyToClipboard(exportedXml()!)"
+          *ngIf="exportedXml()"
+        ></button>
+        <button 
+          pButton 
+          pRipple 
+          type="button" 
+          label="Close" 
+          icon="pi pi-times" 
+          class="p-button-outlined" 
+          (click)="closeExportDialog()"
+        ></button>
+      </ng-template>
+    </p-dialog>
+    
+    <p-confirmDialog></p-confirmDialog>
+    <p-toast></p-toast>
+  `,
   styleUrls: ['./project-detail.component.scss']
 })
-export class ProjectDetailComponent implements OnInit, OnDestroy {
-  // Input parameters
-  projectId: string = '';
-  
-  // Observables
-  project$: Observable<Project | null>;
-  roots$: Observable<Root[]>;
-  treeNodes$: Observable<TreeNode[]>;
-  breadcrumbs$: Observable<any[]>;
-  selectedNodeDetails$: Observable<any>;
-  exportedXml$: Observable<string>;
-  
-  // UI state observables
-  activeTab$: BehaviorSubject<'tree' | 'list'> = new BehaviorSubject<'tree' | 'list'>('tree');
-  selectedNode$: BehaviorSubject<any> = new BehaviorSubject<any>(null);
-  searchTerm$: BehaviorSubject<string> = new BehaviorSubject<string>('');
-  
-  // Dialog state
-  rootDialogVisible = false;
-  rootDialogHeader = '';
-  editingRoot: Partial<Root> = {};
-  isEditingRoot = false;
-  
-  exportDialogVisible = false;
-  
-  private destroy$ = new Subject<void>();
+export class ProjectDetailComponent implements OnInit {
+  // Injected services
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private store = inject(Store<AppState>);
+  private confirmationService = inject(ConfirmationService);
+  private messageService = inject(MessageService);
+  private signalRService = inject(SignalRService);
+  private fb = inject(FormBuilder);
+  private destroyRef = inject(DestroyRef);
 
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private store: Store<AppState>,
-    private confirmationService: ConfirmationService,
-    private messageService: MessageService,
-    private signalRService: SignalRService
-  ) {
-    // Initialize observables that depend on injected services
-    this.project$ = of(null);
-    this.roots$ = of([]);
-    this.treeNodes$ = of([]);
-    this.breadcrumbs$ = of([]);
-    this.selectedNodeDetails$ = of(null);
-    this.exportedXml$ = this.store.select(state => state.roots.exportedXml).pipe(
+  // State
+  projectId = signal<string>('');
+
+  // Signals derived from Store
+  project = toSignal<Project | null>(
+    this.store.select(selectProjectById(this.projectId())).pipe(
+      filter(project => !!project)
+    ),
+    { initialValue: null }
+  );
+
+roots = toSignal<Root[] | null>(
+  this.store.select(selectRootsByProjectId(this.projectId())).pipe(
+    filter(roots => !!roots)
+  ),
+  { initialValue: null }
+);
+
+  exportedXml = toSignal<string>(
+    this.store.select(state => state.roots.exportedXml).pipe(
       filter((xml): xml is string => xml !== null)
-    );
+    ),
+    { initialValue: null }
+  );
+
+  // UI state signals
+  activeTab = signal<'tree' | 'list'>('tree');
+  selectedNode = signal<TreeNode | null>(null);  // Changed from TreeNode[] | null
+
+  searchTerm = signal<string>('');
+  treeNodes = signal<TreeNode[]>([]);
+  rootDialogVisible = signal<boolean>(false);
+  rootDialogHeader = signal<string>('');
+  isEditingRoot = signal<boolean>(false);
+  exportDialogVisible = signal<boolean>(false);
+
+  // Computed signals
+  breadcrumbs = computed(() => {
+    const project = this.project();
+    return [
+      { label: 'Projects', routerLink: ['/projects'] },
+      { label: 'Project', routerLink: ['/projects', project?.id || ''] },
+      { label: project?.name || 'Loading...' }
+    ];
+  });
+
+  selectedNodeDetails = computed(() => {
+    const node = this.selectedNode();
+    return node ? node.data : null;
+  });
+
+  // Reactive form
+  rootForm: FormGroup = this.fb.group({
+    name: ['', [Validators.required, Validators.minLength(3)]],
+    description: ['']
+  });
+
+  constructor() {
+    // Effects to handle side effects of signal changes`
+    effect(() => {
+      const nodes = this.buildTreeNodes(this.project(), this.roots() ?? []);
+      this.treeNodes.set(nodes);
+
+      // If we have nodes and this is initial load, expand first level
+      if (nodes.length > 0 && this.selectedNode() === null) {
+        setTimeout(() => this.expandFirstLevel(nodes), 100);
+      }
+    });
+
+    // Effect to handle search term changes
+    effect(() => {
+      const term = this.searchTerm();
+      const nodes = this.treeNodes();
+
+      if (term && nodes.length > 0) {
+        this.filterTreeNodes(term, nodes);
+      }
+    });
   }
 
   ngOnInit() {
-    this.route.params.pipe(takeUntil(this.destroy$)).subscribe(params => {
-      this.projectId = params['id'];
-      
+    this.route.params.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(params => {
+      const id = params['id'];
+      this.projectId.set(id);
+
       // Load project details and roots
-      this.store.dispatch(loadProject({ id: this.projectId }));
-      this.store.dispatch(loadRootsByProject({ projectId: this.projectId }));
-      
+      this.store.dispatch(loadProject({ id }));
+      this.store.dispatch(loadRootsByProject({ projectId: id }));
+
       // Join SignalR group for this project
-      this.signalRService.joinProject(this.projectId);
-      
-      // Set up project observable
-      this.project$ = this.store.select(selectProjectById(this.projectId)).pipe(
-        filter(project => !!project) // Only emit when project is available
-      );
-      
-      // Set up roots observable
-      this.roots$ = this.store.select(selectRootsByProjectId(this.projectId)).pipe(
-        filter(roots => !!roots) // Only emit when roots are available
-      );
-      
-      // Create breadcrumbs observable
-      this.breadcrumbs$ = this.project$.pipe(
-        map(project => [
-          { label: 'Projects', routerLink: ['/projects'] },
-          { label: 'Project', routerLink: ['/projects', project?.id || ''] },
-          { label: project?.name || 'Loading...' }
-        ])
-      );
-      
-      // Create treeNodes observable - combines project and roots
-      this.treeNodes$ = combineLatest([this.project$, this.roots$]).pipe(
-        map(([project, roots]) => this.buildTreeNodes(project!, roots))
-      );
-      
-      // Create selected node details observable
-      this.selectedNodeDetails$ = this.selectedNode$.pipe(
-        filter(node => !!node),
-        map(node => node?.data || null)
-      );
+      this.signalRService.joinProject(id);
     });
-    
-    // When treeNodes are first loaded, expand the first level
-    this.treeNodes$.pipe(
-      takeUntil(this.destroy$),
-      filter(nodes => nodes.length > 0),
-      tap(nodes => setTimeout(() => this.expandFirstLevel(nodes), 100))
-    ).subscribe();
-    
-    // Handle search term filtering
-    this.searchTerm$.pipe(
-      takeUntil(this.destroy$),
-      withLatestFrom(this.treeNodes$),
-      tap(([term, nodes]) => {
-        if (term) {
-          this.filterTreeNodes(term, nodes);
-        } else {
-          // When search term is cleared, rebuild the tree
-          this.rebuildTreeNodes();
-        }
-      })
-    ).subscribe();
-  }
-  
-  // Method to rebuild tree nodes from source data
-  rebuildTreeNodes() {
-    // Recombine project and roots to rebuild the tree
-    this.treeNodes$ = combineLatest([this.project$, this.roots$]).pipe(
-      map(([project, roots]) => this.buildTreeNodes(project!, roots))
-    );
-  }
-  
-  ngOnDestroy() {
-    // Leave SignalR group
-    if (this.projectId) {
-      this.signalRService.leaveProject(this.projectId);
-    }
-    
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
-  buildTreeNodes(project: Project, roots: Root[]): TreeNode[] {
+  onDialogHide() {
+    this.rootForm.reset();
+  }
+
+  closeDialog() {
+    this.rootDialogVisible.set(false);
+  }
+
+  closeExportDialog() {
+    this.exportDialogVisible.set(false);
+  }
+
+  buildTreeNodes(project: Project | null, roots: Root[]): TreeNode[] {
     if (!project) return [];
 
     const projectNode: TreeNode = {
@@ -252,7 +635,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
 
     return node;
   }
-  
+
   createFieldNode(field: any, allFields: any[]): TreeNode {
     const node: TreeNode = {
       key: field.id,
@@ -287,46 +670,40 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Expand the first level of nodes (called from subscription)
+  // Expand the first level of nodes
   expandFirstLevel(treeNodes: TreeNode[]) {
     if (treeNodes && treeNodes.length > 0) {
       // Create a deep copy of the nodes to modify
       const expandedNodes = JSON.parse(JSON.stringify(treeNodes));
-      
-      // Project node is already expanded by default
-      
+
       // Expand the first 2-3 root nodes (if they exist)
       if (expandedNodes[0].children) {
         const rootsToExpand = Math.min(3, expandedNodes[0].children.length);
         for (let i = 0; i < rootsToExpand; i++) {
           expandedNodes[0].children[i].expanded = true;
-          
+
           // Also expand the first message of each expanded root
           if (expandedNodes[0]?.children?.[i]?.children?.length) {
             expandedNodes[0].children[i].children[0].expanded = true;
           }
         }
       }
-      
-      // Update the observable with the expanded nodes
-      this.treeNodes$ = of(expandedNodes);
+
+      // Update the signal with the expanded nodes
+      this.treeNodes.set(expandedNodes);
     }
   }
 
   // Handle node selection
   onNodeSelect(event: any) {
-    // Update selected node
-    this.selectedNode$.next(event.node);
-    
-    // Expand the selected node
-    if (event.node) {
-      // We'll need to get the current value of treeNodes$ to expand the parent path
-      this.treeNodes$.pipe(
-        take(1) // Take only the current value
-      ).subscribe(nodes => {
-        // Expand the parent path with the current nodes
-        this.expandParentPath(event.node, nodes);
-      });
+    const node = event.node as TreeNode;  // Ensure correct typing
+    this.selectedNode.set(node);
+  
+    if (node) {
+      // Get the current nodes to expand the parent path
+      const currentNodes = this.treeNodes();
+      // Expand the parent path
+      this.expandParentPath(node, currentNodes);
     }
   }
 
@@ -334,8 +711,8 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
   expandParentPath(node: TreeNode, treeNodes: TreeNode[]) {
     // Create a deep copy to avoid modifying the original data
     const expandedNodes = JSON.parse(JSON.stringify(treeNodes));
-    
-    const findAndExpandParent = (nodes: TreeNode[], targetKey: string|undefined): boolean => {
+
+    const findAndExpandParent = (nodes: TreeNode[], targetKey: string | undefined): boolean => {
       for (const node of nodes) {
         if (node.children && node.children.length > 0) {
           const hasTarget = node.children.some(child => child.key === targetKey);
@@ -343,7 +720,7 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
             node.expanded = true;
             return true;
           }
-          
+
           const foundInChildren = findAndExpandParent(node.children, targetKey);
           if (foundInChildren) {
             node.expanded = true;
@@ -353,56 +730,78 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
       }
       return false;
     };
-    
+
     if (node && expandedNodes) {
       findAndExpandParent(expandedNodes, node.key);
-      
-      // Update the observable with the expanded nodes
-      this.treeNodes$ = of(expandedNodes);
+
+      // Update the signal with the expanded nodes
+      this.treeNodes.set(expandedNodes);
     }
   }
 
   // Set active tab (tree or list view)
   setActiveTab(tab: 'tree' | 'list') {
-    this.activeTab$.next(tab);
+    this.activeTab.set(tab);
   }
 
   // Show dialog to create new root
   showCreateRootDialog() {
-    this.editingRoot = {};
-    this.rootDialogHeader = 'Create New Root';
-    this.isEditingRoot = false;
-    this.rootDialogVisible = true;
+    this.rootForm.reset();
+    this.rootDialogHeader.set('Create New Root');
+    this.isEditingRoot.set(false);
+    this.rootDialogVisible.set(true);
   }
 
   // Show dialog to edit existing root
   showEditRootDialog(root: Root) {
-    this.editingRoot = { ...root };
-    this.rootDialogHeader = 'Edit Root';
-    this.isEditingRoot = true;
-    this.rootDialogVisible = true;
+    this.rootForm.setValue({
+      name: root.name || '',
+      description: root.description || ''
+    });
+    this.rootDialogHeader.set('Edit Root');
+    this.isEditingRoot.set(true);
+    this.rootForm.patchValue({
+      id: root.id
+    });
+    this.rootDialogVisible.set(true);
   }
 
   // Save root (create or update)
   saveRoot() {
-    if (this.isEditingRoot) {
-      const root = this.editingRoot as Root;
+    if (this.rootForm.invalid) return;
+
+    const formValues = this.rootForm.value;
+
+    if (this.isEditingRoot()) {
+      const root: Root = {
+        id: (this.rootForm.get('id')?.value) as string,
+        name: formValues.name,
+        description: formValues.description,
+        projectId: this.projectId(),
+        lastModifiedDate: new Date(),
+        // Preserve these fields from the existing root
+        createdDate: this.roots()?.find(r => r.id === formValues.id)?.createdDate || new Date(),
+        messages: this.roots()?.find(r => r.id === formValues.id)?.messages ?? []
+      };
+
       this.store.dispatch(updateRoot({ root }));
       this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Root updated successfully' });
     } else {
       const newRoot: Root = {
-        id: '',
-        name: this.editingRoot.name || '',
-        description: this.editingRoot.description || '',
-        projectId: this.projectId,
+        id: '', // ID will be generated by the backend
+        name: formValues.name,
+        description: formValues.description,
+        projectId: this.projectId(),
         createdDate: new Date(),
         lastModifiedDate: new Date(),
         messages: []
       };
+
       this.store.dispatch(createRoot({ root: newRoot }));
       this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Root created successfully' });
     }
-    this.rootDialogVisible = false;
+
+    this.closeDialog();
   }
 
   // Confirm deletion of a root
@@ -426,14 +825,17 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
 
   // Export all roots
   exportAllRoots() {
-    if (!this.projectId) return;
+    const projectId = this.projectId();
+    if (!projectId) return;
 
-    this.store.dispatch(exportAllRoots({ projectId: this.projectId }));
-    this.exportDialogVisible = true;
+    this.store.dispatch(exportAllRoots({ projectId }));
+    this.exportDialogVisible.set(true);
   }
 
   // Copy exported XML to clipboard
   copyToClipboard(text: string) {
+    if (!text) return;
+
     navigator.clipboard.writeText(text).then(
       () => {
         this.messageService.add({
@@ -455,33 +857,33 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
     );
   }
 
+
   // Handle search input
   onSearch(event: any) {
     const term = typeof event === 'string' ? event : event.target.value;
-    this.searchTerm$.next(term);
+    this.searchTerm.set(term);
   }
 
   // Clear search
   onClearSearch() {
-    this.searchTerm$.next('');
+    this.searchTerm.set('');
+    // When search is cleared, rebuild tree nodes from original data
+    this.treeNodes.set(this.buildTreeNodes(this.project(), this.roots() ?? []));
   }
 
   // Filter tree nodes based on search term
-  filterTreeNodes(term: string, originalNodes: TreeNode[]) {
-    if (!term || !originalNodes.length) return;
+  filterTreeNodes(term: string, nodes: TreeNode[]) {
+    if (!term || !nodes.length) return;
 
-    // We need to handle filtering differently with observables
-    // Since we don't want to mutate the original data in the store
-    
     // Make a deep copy of the original nodes to work with
-    const nodesCopy = JSON.parse(JSON.stringify(originalNodes));
-    
+    const nodesCopy = JSON.parse(JSON.stringify(nodes));
+
     const filterNode = (node: TreeNode): boolean => {
       // Check if the current node matches
       const nodeLabel = node.label?.toLowerCase() || '';
       const nodeDescription = (node.data?.description || '').toLowerCase();
-      const matches = nodeLabel.includes(term.toLowerCase()) || 
-                    nodeDescription.includes(term.toLowerCase());
+      const matches = nodeLabel.includes(term.toLowerCase()) ||
+        nodeDescription.includes(term.toLowerCase());
 
       // Check if any children match
       let childrenMatch = false;
@@ -506,17 +908,16 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
 
     // Apply filter to the root nodes
     const filteredNodes = nodesCopy.filter(filterNode);
-    
-    // Since we can't directly update the observable, we create a new
-    // treeNodes$ observable with our filtered data
-    this.treeNodes$ = of(filteredNodes);
+
+    // Update the treeNodes signal with filtered data
+    this.treeNodes.set(filteredNodes);
   }
 
   // Function to get header text for selected node
-  getSelectedNodeHeader(node: any): string {
+  getSelectedNodeHeader(node: TreeNode | null): string {
     if (!node) return '';
-
-    const type = node.type.charAt(0).toUpperCase() + node.type.slice(1);
+  
+    const type = (node.type as string)?.charAt(0).toUpperCase() + (node.type as string)?.slice(1);
     return `${type} Details: ${node.label || ''}`;
   }
 
@@ -562,10 +963,10 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
   }
 
   // Navigate to details view for selected node
-  viewNodeDetails(node: any) {
+  viewNodeDetails(node: TreeNode | null) {
     if (!node) return;
-
-    switch (node.type) {
+  
+    switch (node.type as string) {
       case 'project':
         // Already on project details page
         break;
@@ -580,12 +981,11 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
         break;
     }
   }
-
-  // Edit selected node
-  editSelectedNode(node: any) {
+  
+  editSelectedNode(node: TreeNode | null) {
     if (!node) return;
-
-    switch (node.type) {
+  
+    switch (node.type as string) {
       case 'project':
         // Edit project logic
         break;
@@ -602,14 +1002,13 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
         break;
     }
   }
-
-  // Delete selected node
-  deleteSelectedNode(node: any) {
+  
+  deleteSelectedNode(node: TreeNode | null) {
     if (!node) return;
-
+  
     const name = node.label || '';
-    const type = node.type;
-
+    const type = node.type as string;
+  
     this.confirmationService.confirm({
       message: `Are you sure you want to delete the ${type} "${name}"?`,
       header: 'Confirm Delete',
@@ -618,27 +1017,40 @@ export class ProjectDetailComponent implements OnInit, OnDestroy {
       accept: () => {
         switch (type) {
           case 'root':
-            this.store.dispatch(deleteRoot({ id: node.key }));
+            this.store.dispatch(deleteRoot({ id: node.key as string }));
             break;
           // Add other entity type deletions when implemented
         }
-
-        this.selectedNode$.next(null);
-        this.messageService.add({ severity: 'success', summary: 'Success', detail: `${type} deleted successfully` });
+  
+        this.selectedNode.set(null);
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Success',
+          detail: `${type} deleted successfully`
+        });
       }
     });
   }
 
   // Export selected node to XML
-  exportSelectedNode(node: any) {
+  exportSelectedNode(node: TreeNode | null) {
     if (!node) return;
-
-    switch (node.type) {
+  
+    switch (node.type as string) {
       case 'root':
-        this.store.dispatch(exportRoot({ id: node.key }));
-        this.exportDialogVisible = true;
+        this.store.dispatch(exportRoot({ id: node.key as string }));
+        this.exportDialogVisible.set(true);
         break;
       // Add other entity type exports when implemented
+    }
+  }
+  onSelectionChange(event: TreeNode | TreeNode[]|null) {
+    if (Array.isArray(event)) {
+      // If it's an array, take the first item (shouldn't happen in single mode, but just in case)
+      this.selectedNode.set(event.length > 0 ? event[0] : null);
+    } else {
+      // If it's a single node, use it directly
+      this.selectedNode.set(event);
     }
   }
 }

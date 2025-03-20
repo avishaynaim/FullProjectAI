@@ -1,9 +1,9 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, signal, computed, inject, Signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Store } from '@ngrx/store';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, Observable, map, switchMap, filter, tap } from 'rxjs';
 import { AppState } from '../../store/app.state';
 import { selectRootById } from '../../store/root/root.selectors';
 import { Root } from '../../models/root.model';
@@ -21,21 +21,24 @@ import { SignalRService } from '../../services/signalr.service';
 import { Breadcrumb } from '../../models/breadcrumb.model';
 import { updateMessage, createMessage, deleteMessage } from '../../store/message/message.actions';
 import { exportRoot, loadRoot, updateRoot } from '../../store/root/root.actions';
+import { TooltipModule } from 'primeng/tooltip';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
 @Component({
   selector: 'app-root-detail',
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule,
+    ReactiveFormsModule,
     RouterModule,
     CardModule,
     ButtonModule,
     DialogModule,
     TableModule,
     InputTextModule,
-    // InputTextareaModule,
     ToolbarModule,
+    TooltipModule,
+    ConfirmDialogModule,
     BreadcrumbComponent,
     SearchBoxComponent
   ],
@@ -43,12 +46,12 @@ import { exportRoot, loadRoot, updateRoot } from '../../store/root/root.actions'
   template: `
     <div class="card">
       <div class="mb-4">
-        <app-breadcrumb [breadcrumbs]="breadcrumbs"></app-breadcrumb>
+        <app-breadcrumb [breadcrumbs]="breadcrumbs()"></app-breadcrumb>
       </div>
       
       <p-toolbar>
         <div class="p-toolbar-group-start">
-          <h1 class="text-2xl font-bold m-0" *ngIf="root">{{ root.name }}</h1>
+          <h1 class="text-2xl font-bold m-0" *ngIf="root() as root">{{ root.name }}</h1>
         </div>
         <div class="p-toolbar-group-end">
           <app-search-box 
@@ -69,7 +72,7 @@ import { exportRoot, loadRoot, updateRoot } from '../../store/root/root.actions'
             label="Export" 
             icon="pi pi-download" 
             class="p-button-success ml-2" 
-            (click)="exportRoot()"
+            (click)="handleExportRoot()"
           ></button>
         </div>
       </p-toolbar>
@@ -77,48 +80,50 @@ import { exportRoot, loadRoot, updateRoot } from '../../store/root/root.actions'
       <div class="grid mt-4">
         <div class="col-4">
           <p-card header="Root Information" styleClass="h-full">
-            <div class="grid">
-              <div class="col-4 font-bold">Name:</div>
-              <div class="col-8">{{ root?.name }}</div>
+            <ng-container *ngIf="root() as root">
+              <div class="grid">
+                <div class="col-4 font-bold">Name:</div>
+                <div class="col-8">{{ root.name }}</div>
+                
+                <div class="col-4 font-bold">Description:</div>
+                <div class="col-8">{{ root.description }}</div>
+                
+                <div class="col-4 font-bold">Created:</div>
+                <div class="col-8">{{ root.createdDate | date }}</div>
+                
+                <div class="col-4 font-bold">Last Modified:</div>
+                <div class="col-8">{{ root.lastModifiedDate | date }}</div>
+                
+                <div class="col-4 font-bold">Messages:</div>
+                <div class="col-8">{{ root.messages?.length || 0 }}</div>
+              </div>
               
-              <div class="col-4 font-bold">Description:</div>
-              <div class="col-8">{{ root?.description }}</div>
-              
-              <div class="col-4 font-bold">Created:</div>
-              <div class="col-8">{{ root?.createdDate | date }}</div>
-              
-              <div class="col-4 font-bold">Last Modified:</div>
-              <div class="col-8">{{ root?.lastModifiedDate | date }}</div>
-              
-              <div class="col-4 font-bold">Messages:</div>
-              <div class="col-8">{{ root?.messages?.length || 0 }}</div>
-            </div>
-            
-            <div class="flex justify-content-end gap-2 mt-4">
-              <button 
-                pButton 
-                type="button" 
-                icon="pi pi-arrow-left" 
-                label="Back to Project" 
-                class="p-button-outlined"
-                [routerLink]="['/projects', root?.projectId]"
-              ></button>
-              <button 
-                pButton 
-                type="button" 
-                icon="pi pi-pencil" 
-                label="Edit" 
-                class="p-button-success" 
-                (click)="showEditRootDialog()"
-              ></button>
-            </div>
+              <div class="flex justify-content-end gap-2 mt-4">
+                <button 
+                  pButton 
+                  type="button" 
+                  icon="pi pi-arrow-left" 
+                  label="Back to Project" 
+                  class="p-button-outlined"
+                  [routerLink]="['/projects', root.projectId]"
+                ></button>
+                <button 
+                  pButton 
+                  type="button" 
+                  icon="pi pi-pencil" 
+                  label="Edit" 
+                  class="p-button-success" 
+                  (click)="showEditRootDialog()"
+                ></button>
+              </div>
+            </ng-container>
           </p-card>
         </div>
         
         <div class="col-8">
           <p-card header="Messages" styleClass="h-full">
             <p-table 
-              [value]="root?.messages || []" 
+              [value]="messages()" 
               styleClass="p-datatable-sm p-datatable-gridlines"
               [paginator]="true" 
               [rows]="10" 
@@ -185,117 +190,124 @@ import { exportRoot, loadRoot, updateRoot } from '../../store/root/root.actions'
     </div>
     
     <p-dialog 
-      [(visible)]="rootDialogVisible" 
+    [visible]="rootDialogVisible()" (visibleChange)="rootDialogVisible.set($event)"
       [header]="'Edit Root'"
       [modal]="true" 
       [draggable]="false" 
       [resizable]="false"
       [style]="{width: '500px'}"
+      (onHide)="resetDialogs()"
     >
-      <ng-container *ngIf="rootDialogVisible">
-        <div class="p-fluid">
-          <div class="field">
-            <label for="rootName" class="font-bold">Name</label>
-            <input 
-              id="rootName" 
-              type="text" 
-              pInputText 
-              [(ngModel)]="editingRoot.name"
-              class="w-full" 
-            />
+      <ng-container *ngIf="rootDialogVisible() && rootForm">
+        <form [formGroup]="rootForm" (ngSubmit)="saveRoot()">
+          <div class="p-fluid">
+            <div class="field">
+              <label for="rootName" class="font-bold">Name</label>
+              <input 
+                id="rootName" 
+                type="text" 
+                pInputText 
+                formControlName="name"
+                class="w-full" 
+              />
+            </div>
+            
+            <div class="field">
+              <label for="rootDescription" class="font-bold">Description</label>
+              <textarea 
+                id="rootDescription"
+                pInputTextarea
+                formControlName="description"
+                rows="3"
+                class="w-full"
+              ></textarea>
+            </div>
+            
+            <div class="flex justify-content-end gap-2 mt-4">
+              <button 
+                pButton 
+                type="button" 
+                label="Cancel" 
+                class="p-button-outlined" 
+                (click)="setRootDialogVisible(false)"
+              ></button>
+              <button 
+                pButton 
+                type="submit" 
+                label="Save" 
+                [disabled]="rootForm.invalid"
+              ></button>
+            </div>
           </div>
-          
-          <div class="field">
-            <label for="rootDescription" class="font-bold">Description</label>
-            <textarea 
-              id="rootDescription"
-              pInputTextarea
-              [(ngModel)]="editingRoot.description"
-              rows="3"
-              class="w-full"
-            ></textarea>
-          </div>
-          
-          <div class="flex justify-content-end gap-2 mt-4">
-            <button 
-              pButton 
-              type="button" 
-              label="Cancel" 
-              class="p-button-outlined" 
-              (click)="rootDialogVisible = false"
-            ></button>
-            <button 
-              pButton 
-              type="button" 
-              label="Save" 
-              (click)="saveRoot()"
-            ></button>
-          </div>
-        </div>
+        </form>
       </ng-container>
     </p-dialog>
     
     <p-dialog 
-      [(visible)]="messageDialogVisible" 
-      [header]="messageDialogHeader"
+      [visible]="messageDialogVisible()" (visibleChange)="messageDialogVisible.set($event)"
+      [header]="messageDialogHeader()"
       [modal]="true" 
       [draggable]="false" 
       [resizable]="false"
       [style]="{width: '500px'}"
+      (onHide)="resetDialogs()"
     >
-      <ng-container *ngIf="messageDialogVisible">
-        <div class="p-fluid">
-          <div class="field">
-            <label for="messageName" class="font-bold">Name</label>
-            <input 
-              id="messageName" 
-              type="text" 
-              pInputText 
-              [(ngModel)]="editingMessage.name"
-              class="w-full" 
-            />
+      <ng-container *ngIf="messageDialogVisible() && messageForm">
+        <form [formGroup]="messageForm" (ngSubmit)="saveMessage()">
+          <div class="p-fluid">
+            <div class="field">
+              <label for="messageName" class="font-bold">Name</label>
+              <input 
+                id="messageName" 
+                type="text" 
+                pInputText 
+                formControlName="name"
+                class="w-full" 
+              />
+            </div>
+            
+            <div class="field">
+              <label for="messageDescription" class="font-bold">Description</label>
+              <textarea 
+                id="messageDescription"
+                pInputTextarea
+                formControlName="description"
+                rows="3"
+                class="w-full"
+              ></textarea>
+            </div>
+            
+            <div class="flex justify-content-end gap-2 mt-4">
+              <button 
+                pButton 
+                type="button" 
+                label="Cancel" 
+                class="p-button-outlined" 
+                (click)="setMessageDialogVisible(false)"
+              ></button>
+              <button 
+                pButton 
+                type="submit" 
+                label="Save" 
+                [disabled]="messageForm.invalid"
+              ></button>
+            </div>
           </div>
-          
-          <div class="field">
-            <label for="messageDescription" class="font-bold">Description</label>
-            <textarea 
-              id="messageDescription"
-              pInputTextarea
-              [(ngModel)]="editingMessage.description"
-              rows="3"
-              class="w-full"
-            ></textarea>
-          </div>
-          
-          <div class="flex justify-content-end gap-2 mt-4">
-            <button 
-              pButton 
-              type="button" 
-              label="Cancel" 
-              class="p-button-outlined" 
-              (click)="messageDialogVisible = false"
-            ></button>
-            <button 
-              pButton 
-              type="button" 
-              label="Save" 
-              (click)="saveMessage()"
-            ></button>
-          </div>
-        </div>
+        </form>
       </ng-container>
     </p-dialog>
     
     <p-dialog 
-      [(visible)]="exportDialogVisible"
+      [visible]="exportDialogVisible()" (visibleChange)="exportDialogVisible.set($event)"
       header="Exported XML"
       [modal]="true"
       [draggable]="false"
       [resizable]="false"
       [style]="{width: '80vw'}"
+      (onHide)="resetDialogs()"
     >
       <div class="p-3 border rounded bg-gray-100 overflow-auto" style="max-height: 70vh">
-        <pre>{{ exportedXml }}</pre>
+        <pre>{{ exportedXml() }}</pre>
       </div>
       <div class="flex justify-content-end mt-4">
         <button 
@@ -303,7 +315,7 @@ import { exportRoot, loadRoot, updateRoot } from '../../store/root/root.actions'
           type="button" 
           label="Copy" 
           icon="pi pi-copy" 
-          (click)="copyToClipboard(exportedXml)"
+          (click)="copyToClipboard(exportedXml())"
         ></button>
         <button 
           pButton 
@@ -311,120 +323,198 @@ import { exportRoot, loadRoot, updateRoot } from '../../store/root/root.actions'
           label="Close" 
           icon="pi pi-times" 
           class="p-button-outlined ml-2" 
-          (click)="exportDialogVisible = false"
+          (click)="setExportDialogVisible(false)"
         ></button>
       </div>
     </p-dialog>
+    
+    <p-confirmDialog></p-confirmDialog>
   `
 })
 export class RootDetailComponent implements OnInit, OnDestroy {
-  rootId: string = '';
-  root: Root | null = null;
-  breadcrumbs: Breadcrumb[] = [];
+  // Signals
+  rootId = signal<string>('');
+  root = signal<Root | null>(null);
+  messages = computed(() => this.root()?.messages || []);
+  breadcrumbs = signal<Breadcrumb[]>([]);
   
-  rootDialogVisible = false;
-  editingRoot: Partial<Root> = {};
+  // Dialog controls
+  rootDialogVisible = signal<boolean>(false);
+  messageDialogVisible = signal<boolean>(false);
+  messageDialogHeader = signal<string>('');
+  exportDialogVisible = signal<boolean>(false);
+  exportedXml = signal<string>('');
+  isEditingMessage = signal<boolean>(false);
   
-  messageDialogVisible = false;
-  messageDialogHeader = '';
-  editingMessage: Partial<Message> = {};
-  isEditingMessage = false;
+  // Forms
+  rootForm!: FormGroup;
+  messageForm!: FormGroup;
   
-  exportDialogVisible = false;
-  exportedXml: string = '';
+  // Services
+  private store = inject(Store<AppState>);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private confirmationService = inject(ConfirmationService);
+  private messageService = inject(MessageService);
+  private signalRService = inject(SignalRService);
+  private fb = inject(FormBuilder);
   
   private destroy$ = new Subject<void>();
 
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private store: Store<AppState>,
-    private confirmationService: ConfirmationService,
-    private messageService: MessageService,
-    private signalRService: SignalRService
-  ) {}
-
   ngOnInit() {
-    this.route.params.pipe(takeUntil(this.destroy$)).subscribe(params => {
-      this.rootId = params['id'];
-      
-      // Load root details
-      this.store.dispatch(loadRoot({ id: this.rootId }));
-      
-      // Subscribe to root data
-      this.store.select(selectRootById(this.rootId)).pipe(
-        takeUntil(this.destroy$)
-      ).subscribe(root => {
-        if (root) {
-          this.root = root;
-          
-          // Update breadcrumbs
-          this.breadcrumbs = [
-            { label: 'Projects', routerLink: ['/projects'] },
-            { label: 'Project', routerLink: ['/projects', root.projectId] },
-            { label: root.name }
-          ];
-          
-          // Join SignalR group for this project
-          this.signalRService.joinProject(root.projectId);
+    // Initialize forms
+    this.initForms();
+    
+    this.route.params.pipe(
+      takeUntil(this.destroy$),
+      map(params => params['id']),
+      tap(id => {
+        this.rootId.set(id);
+        this.store.dispatch(loadRoot({ id }));
+      }),
+      switchMap(id => this.store.select(selectRootById(id)).pipe(
+        filter(root => !!root)
+      ))
+    ).subscribe(root => {
+      if (root) {
+        this.root.set(root);
+        
+        // Update breadcrumbs
+        this.breadcrumbs.set([
+          { label: 'Projects', routerLink: ['/projects'] },
+          { label: 'Project', routerLink: ['/projects', root.projectId] },
+          { label: root.name }
+        ]);
+        
+        // Join SignalR group for this project
+        this.signalRService.joinProject(root.projectId);
+      }
+    });
+    
+    // Listen for exported XML
+    this.store.select(state => state.roots.exportedXml)
+      .pipe(
+        takeUntil(this.destroy$),
+        filter(xml => !!xml)
+      )
+      .subscribe(xml => {
+        if (xml) {
+          this.exportedXml.set(xml);
+          this.setExportDialogVisible(true);
         }
       });
-    });
   }
 
   ngOnDestroy() {
     // Leave SignalR group
-    if (this.root) {
-      this.signalRService.leaveProject(this.root.projectId);
+    const currentRoot = this.root();
+    if (currentRoot) {
+      this.signalRService.leaveProject(currentRoot.projectId);
     }
     
     this.destroy$.next();
     this.destroy$.complete();
   }
+  
+  private initForms() {
+    this.rootForm = this.fb.group({
+      name: ['', [Validators.required]],
+      description: ['']
+    });
+    
+    this.messageForm = this.fb.group({
+      id: [''],
+      name: ['', [Validators.required]],
+      description: ['']
+    });
+  }
+
+  // Dialog control methods
+  setRootDialogVisible(visible: boolean) {
+    this.rootDialogVisible.set(visible);
+  }
+  
+  setMessageDialogVisible(visible: boolean) {
+    this.messageDialogVisible.set(visible);
+  }
+  
+  setExportDialogVisible(visible: boolean) {
+    this.exportDialogVisible.set(visible);
+  }
+  
+  resetDialogs() {
+    if (this.rootForm) {
+      this.rootForm.reset();
+    }
+    if (this.messageForm) {
+      this.messageForm.reset();
+    }
+  }
 
   showEditRootDialog() {
-    if (!this.root) return;
+    const currentRoot = this.root();
+    if (!currentRoot) return;
     
-    this.editingRoot = { ...this.root };
-    this.rootDialogVisible = true;
+    this.rootForm.patchValue({
+      name: currentRoot.name,
+      description: currentRoot.description
+    });
+    
+    this.setRootDialogVisible(true);
   }
 
   saveRoot() {
-    if (!this.root) return;
+    if (!this.rootForm.valid || !this.root()) return;
+    
+    const currentRoot = this.root()!;
+    const formValues = this.rootForm.value;
     
     const updatedRoot: Root = {
-      ...this.root,
-      name: this.editingRoot.name || this.root.name,
-      description: this.editingRoot.description || this.root.description,
+      ...currentRoot,
+      name: formValues.name,
+      description: formValues.description,
       lastModifiedDate: new Date()
     };
     
     this.store.dispatch(updateRoot({ root: updatedRoot }));
     this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Root updated successfully' });
-    this.rootDialogVisible = false;
+    this.setRootDialogVisible(false);
   }
 
   showCreateMessageDialog() {
-    this.editingMessage = {};
-    this.messageDialogHeader = 'Create New Message';
-    this.isEditingMessage = false;
-    this.messageDialogVisible = true;
+    this.messageForm.reset();
+    this.messageDialogHeader.set('Create New Message');
+    this.isEditingMessage.set(false);
+    this.setMessageDialogVisible(true);
   }
 
   showEditMessageDialog(message: Message) {
-    this.editingMessage = { ...message };
-    this.messageDialogHeader = 'Edit Message';
-    this.isEditingMessage = true;
-    this.messageDialogVisible = true;
+    this.messageForm.patchValue({
+      id: message.id,
+      name: message.name,
+      description: message.description
+    });
+    
+    this.messageDialogHeader.set('Edit Message');
+    this.isEditingMessage.set(true);
+    this.setMessageDialogVisible(true);
   }
 
   saveMessage() {
-    if (!this.root) return;
+    if (!this.messageForm.valid || !this.root()) return;
     
-    if (this.isEditingMessage && this.editingMessage.id) {
+    const formValues = this.messageForm.value;
+    const currentRootId = this.rootId();
+    
+    if (this.isEditingMessage() && formValues.id) {
       // Update existing message
+      const existingMessage = this.messages().find(m => m.id === formValues.id);
+      if (!existingMessage) return;
+      
       const updatedMessage: Message = {
-        ...(this.editingMessage as Message),
+        ...existingMessage,
+        name: formValues.name,
+        description: formValues.description,
         lastModifiedDate: new Date()
       };
       
@@ -433,10 +523,10 @@ export class RootDetailComponent implements OnInit, OnDestroy {
     } else {
       // Create new message
       const newMessage: Message = {
-        id: '',
-        name: this.editingMessage.name || '',
-        description: this.editingMessage.description || '',
-        rootId: this.rootId,
+        id: '',  // Will be generated by the API/backend
+        name: formValues.name,
+        description: formValues.description,
+        rootId: currentRootId,
         createdDate: new Date(),
         lastModifiedDate: new Date(),
         fields: []
@@ -446,7 +536,7 @@ export class RootDetailComponent implements OnInit, OnDestroy {
       this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Message created successfully' });
     }
     
-    this.messageDialogVisible = false;
+    this.setMessageDialogVisible(false);
   }
 
   confirmDeleteMessage(message: Message) {
@@ -461,20 +551,11 @@ export class RootDetailComponent implements OnInit, OnDestroy {
     });
   }
 
-  exportRoot() {
-    if (!this.rootId) return;
+  handleExportRoot() {
+    const currentRootId = this.rootId();
+    if (!currentRootId) return;
     
-    this.store.dispatch(exportRoot({ id: this.rootId }));
-    
-    // Subscribe to the exported XML
-    this.store.select(state => state.roots.exportedXml).pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(xml => {
-      if (xml) {
-        this.exportedXml = xml;
-        this.exportDialogVisible = true;
-      }
-    });
+    this.store.dispatch(exportRoot({ id: currentRootId }));
   }
 
   copyToClipboard(text: string) {
@@ -491,9 +572,11 @@ export class RootDetailComponent implements OnInit, OnDestroy {
 
   onSearch(term: string) {
     // Implement search functionality
+    console.log('Searching for:', term);
   }
 
   onClearSearch() {
     // Reset search results
+    console.log('Search cleared');
   }
 }
